@@ -902,7 +902,13 @@ PlayerSettings:
   XboxOneOverrideIdentityName: 
   XboxOneOverrideIdentityPublisher: 
   vrEditorSettings: {}
-  cloudServicesEnabled: {}
+  cloudServicesEnabled:
+    Build: 0
+    Game Performance: 0
+    Legacy Analytics: 0
+    Purchasing: 0
+    UDP: 0
+    Unity Ads: 0
   luminIcon:
     m_Name: 
     m_ModelFolderPath: 
@@ -924,10 +930,10 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
-  cloudProjectId: 549b7783-ee61-44a6-9330-e00077996bc1
+  cloudProjectId: 675afce5-bc6f-4722-9d47-de99bfef4b12
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Shadow Arena
+  projectName: ShadowArena
   organizationId: shahmoazzem_sv
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
