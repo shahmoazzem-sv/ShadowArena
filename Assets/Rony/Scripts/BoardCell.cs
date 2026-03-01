@@ -1,12 +1,12 @@
 public class BoardCell
 {
-    GridSystem<BoardCell> grid;
+    private IGridSystem grid;
     int x, y;
     string cellName;
     ChessPiece pieceOnCell;
 
 
-    public BoardCell(GridSystem<BoardCell> grid, int x, int y)
+    public BoardCell(IGridSystem grid, int x, int y)
     {
         this.grid = grid;
         this.x = x;

@@ -5,7 +5,7 @@ public class BoardManager : MonoBehaviour
 {
 
     Mouse mouse;
-    private GridSystem<BoardCell> gridSystem;
+    private GridDataSystem<BoardCell> gridSystem;
 
 
     [Header("Grid Settings")]
@@ -17,12 +17,12 @@ public class BoardManager : MonoBehaviour
     void Start()
     {
         // Initialize the grid logic
-        gridSystem = new GridSystem<BoardCell>(
+        gridSystem = new GridDataSystem<BoardCell>(
             boardSize,
             boardSize,
             cellSize,
             originPosition,
-            (GridSystem<BoardCell> g, int x, int y) => new BoardCell(g, x, y)
+            (GridDataSystem<BoardCell> g, int x, int y) => new BoardCell(g, x, y)
         );
         mouse = Mouse.current;
     }
@@ -44,7 +44,12 @@ public class BoardManager : MonoBehaviour
 
 
             Vector2Int gridPos = gridSystem.GetGridPosition(mouseWorldPos);
-            Debug.Log($"Clicked on Cell: {gridPos}");
+            if (gridSystem.IsInBounds(gridPos))
+            {
+                // 2. Use the "Data" part of the system (from the Generic class)
+                BoardCell cell = gridSystem.GetGridObject(gridPos.x, gridPos.y);
+                Debug.Log($"Clicked on {cell.GetCellName()}. Occupied: {cell.IsOccupied()}");
+            }
         }
     }
 }

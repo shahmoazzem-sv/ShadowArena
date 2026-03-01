@@ -4,7 +4,7 @@ public interface IGridSystem
 {
     int Width { get; }
     int Height { get; }
-    Vector2 cellSize { get; }
+    Vector2 CellSize { get; }
 
     Vector3 GetWorldPosition(int x, int y);
     Vector2Int GetGridPosition(Vector3 worldPosition);
