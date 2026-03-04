@@ -48,7 +48,7 @@ public class BoardManager : MonoBehaviour
             {
                 // 2. Use the "Data" part of the system (from the Generic class)
                 BoardCell cell = gridSystem.GetGridObject(gridPos.x, gridPos.y);
-                Debug.Log($"Clicked on {cell.GetCellName()}. Occupied: {cell.IsOccupied()}");
+                Debug.Log($"Clicked on <color=red> {cell.GetCellName()}.</color> Occupied: {cell.IsOccupied()}");
             }
         }
     }

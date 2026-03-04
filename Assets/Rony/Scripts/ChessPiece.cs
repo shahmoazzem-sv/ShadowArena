@@ -5,6 +5,7 @@ public enum PieceColor { White, Black }
 public enum PieceType { Pawn, Knight, Bishop, Rook, Queen, King }
 public abstract class ChessPiece : MonoBehaviour
 {
+    public PieceData pieceData;
     public PieceColor pieceColor;
     public PieceType pieceType;
     public Vector2Int currentGridPosition;
