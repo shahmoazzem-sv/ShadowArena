@@ -10,6 +10,8 @@ public abstract class ChessPiece : MonoBehaviour
     public PieceType pieceType;
     public Vector2Int currentGridPosition;
 
+    public bool hasMoved = false;
+
     // Every specific piece will override this to define how it moves
     public abstract List<Vector2Int> GetValidMoves(BoardManager board);
 }
