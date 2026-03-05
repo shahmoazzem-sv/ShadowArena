@@ -35,6 +35,9 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private Queen queenPrefab;
     [SerializeField] private King kingPrefab;
 
+    [Header("UI")]
+    [SerializeField] private PromotionUI promotionUI;
+
     // Selection state
     private ChessPiece selectedPiece;
     private Vector2Int selectedPieceOriginalGrid;
@@ -187,26 +190,117 @@ public class BoardManager : MonoBehaviour
         destCell.SetPiece(selectedPiece);
 
         // create and store LastMove
+        // MoveRecord rec = new MoveRecord
+        // {
+        //     piece = selectedPiece,
+        //     from = selectedPieceOriginalGrid,
+        //     to = dropGridPos,
+        //     captured = captured,
+        //     wasDoublePawnPush = (selectedPiece is Pawn) && Mathf.Abs(dropGridPos.y - selectedPieceOriginalGrid.y) == 2
+        // };
+        // LastMove = rec;
+
+        // // Promotion: auto-queen for simplicity
+        // if (selectedPiece is Pawn)
+        // {
+        //     if ((selectedPiece.pieceColor == PieceColor.White && dropGridPos.y == boardSize - 1) ||
+        //         (selectedPiece.pieceColor == PieceColor.Black && dropGridPos.y == 0))
+        //     {
+        //         PromotePawnToQueen((Pawn)selectedPiece, dropGridPos);
+        //     }
+        // }
         MoveRecord rec = new MoveRecord
         {
             piece = selectedPiece,
             from = selectedPieceOriginalGrid,
             to = dropGridPos,
             captured = captured,
-            wasDoublePawnPush = (selectedPiece is Pawn) && Mathf.Abs(dropGridPos.y - selectedPieceOriginalGrid.y) == 2
+            wasDoublePawnPush = (selectedPiece is Pawn) && Mathf.Abs(dropGridPos.y - selectedPieceOriginalGrid.y) == 2,
+            wasEnPassant = enPassantCapture
         };
         LastMove = rec;
 
-        // Promotion: auto-queen for simplicity
-        if (selectedPiece is Pawn)
+
+        // --- CASTLING: if king moved 2 squares horizontally, move the rook too
+        if (selectedPiece is King && Mathf.Abs(dropGridPos.x - selectedPieceOriginalGrid.x) == 2)
         {
-            if ((selectedPiece.pieceColor == PieceColor.White && dropGridPos.y == boardSize - 1) ||
-                (selectedPiece.pieceColor == PieceColor.Black && dropGridPos.y == 0))
+            // find rook on the side it came from (0 or boardSize - 1)
+            int rookX = (dropGridPos.x > selectedPieceOriginalGrid.x) ? (boardSize - 1) : 0;
+            BoardCell rookOrigCell = gridSystem.GetGridObject(rookX, dropGridPos.y);
+            ChessPiece rook = rookOrigCell?.GetPiece();
+            if (rook != null && rook is Rook && rook.pieceColor == selectedPiece.pieceColor)
             {
-                PromotePawnToQueen((Pawn)selectedPiece, dropGridPos);
+                int rookDestX = (dropGridPos.x > selectedPieceOriginalGrid.x) ? (dropGridPos.x - 1) : (dropGridPos.x + 1);
+                BoardCell rookDestCell = gridSystem.GetGridObject(rookDestX, dropGridPos.y);
+
+                // move rook data
+                if (rookOrigCell != null && rookOrigCell.GetPiece() == rook) rookOrigCell.SetPiece(null);
+                if (rookDestCell != null) rookDestCell.SetPiece(rook);
+
+                rook.currentGridPosition = new Vector2Int(rookDestX, dropGridPos.y);
+                rook.transform.position = gridSystem.GetCellBottomCenterWorldPosition(rookDestX, dropGridPos.y);
+                rook.hasMoved = true;
             }
         }
 
+        // Promotion: show UI instead of auto-queen
+        if (selectedPiece is Pawn)
+        {
+            bool reachedLastRank = (selectedPiece.pieceColor == PieceColor.White && dropGridPos.y == boardSize - 1)
+                                 || (selectedPiece.pieceColor == PieceColor.Black && dropGridPos.y == 0);
+
+            if (reachedLastRank)
+            {
+                // Show promotion UI and wait for callback
+                Pawn pawnToPromote = (Pawn)selectedPiece;
+
+                // Hide move show visuals but keep piece in place while choosing
+                DeleteAllValidMoveShowers();
+
+                // Show UI (promotionUI should be a serialized field on BoardManager)
+                if (promotionUI != null)
+                {
+                    promotionUI.Show(pawnToPromote.pieceColor, (chosenType) =>
+                    {
+                        // perform promotion
+                        PromotePawn(pawnToPromote, chosenType);
+
+                        // finalize turn+checks (same post-move flow as before)
+                        pawnToPromote.hasMoved = true;
+
+                        UpdateCheckStatus();
+
+                        GameManager.Instance.EndTurn();
+
+                        // check for checkmate for next player
+                        PieceColor next = (GameManager.Instance.CurrentState == GameState.WhiteTurn) ? PieceColor.White : PieceColor.Black;
+                        bool inCheck = IsKingInCheck(next);
+                        bool hasAnyLegal = HasAnyLegalMoveForColor(next);
+                        if (inCheck && !hasAnyLegal)
+                        {
+                            Debug.Log($"{next} is checkmated!");
+                            GameManager.Instance.ChangeState(GameState.GameOver);
+                        }
+
+                        // clear selection
+                        ClearSelection();
+                    });
+
+                    // return early — post-move completion will happen in callback
+                    return;
+                }
+                else
+                {
+                    // fallback: auto-queen if UI not assigned
+                    PromotePawnToQueen((Pawn)selectedPiece, dropGridPos);
+                }
+            }
+        }
+
+
+
+
+        // If not a promotion (or promotion UI not assigned and we auto-promoted), continue normal finalization:
         selectedPiece.hasMoved = true;
 
         // cleanup visuals
@@ -235,22 +329,64 @@ public class BoardManager : MonoBehaviour
     }
 
     // Promote pawn to queen (simple automatic promotion)
-    private void PromotePawnToQueen(Pawn pawn, Vector2Int pos)
+    // private void PromotePawnToQueen(Pawn pawn, Vector2Int pos)
+    // {
+    //     BoardCell cell = gridSystem.GetGridObject(pos.x, pos.y);
+    //     if (cell == null) return;
+
+    //     // instantiate queen, copy color, set position and grid cell
+    //     ChessPiece newQ = Instantiate(queenPrefab, transform);
+    //     newQ.pieceType = PieceType.Queen;
+    //     newQ.pieceColor = pawn.pieceColor;
+    //     newQ.currentGridPosition = pos;
+    //     newQ.transform.position = gridSystem.GetCellBottomCenterWorldPosition(pos.x, pos.y);
+
+    //     cell.SetPiece(newQ);
+
+    //     // destroy pawn
+    //     Destroy(pawn.gameObject);
+    // }
+
+    // generic promotion helper
+    private void PromotePawn(Pawn pawn, PieceType promoteTo)
     {
+        Vector2Int pos = pawn.currentGridPosition;
         BoardCell cell = gridSystem.GetGridObject(pos.x, pos.y);
         if (cell == null) return;
 
-        // instantiate queen, copy color, set position and grid cell
-        ChessPiece newQ = Instantiate(queenPrefab, transform);
-        newQ.pieceType = PieceType.Queen;
-        newQ.pieceColor = pawn.pieceColor;
-        newQ.currentGridPosition = pos;
-        newQ.transform.position = gridSystem.GetCellBottomCenterWorldPosition(pos.x, pos.y);
+        ChessPiece prefab = null;
+        switch (promoteTo)
+        {
+            case PieceType.Queen: prefab = queenPrefab; break;
+            case PieceType.Rook: prefab = rookPrefab; break;
+            case PieceType.Bishop: prefab = bishopPrefab; break;
+            case PieceType.Knight: prefab = knightPrefab; break;
+            default: prefab = queenPrefab; break; // fallback
+        }
 
-        cell.SetPiece(newQ);
+        if (prefab == null) return;
+
+        ChessPiece newPiece = Instantiate(prefab, transform);
+        newPiece.pieceType = promoteTo;
+        newPiece.pieceColor = pawn.pieceColor;
+        newPiece.currentGridPosition = pos;
+        newPiece.transform.position = gridSystem.GetCellBottomCenterWorldPosition(pos.x, pos.y);
+
+        // copy sprite if using pieceData
+        SpriteRenderer sr = newPiece.GetComponent<SpriteRenderer>();
+        if (sr != null && pieceData != null) sr.sprite = pieceData.GetSprite(promoteTo, newPiece.pieceColor);
+
+        // place in cell
+        cell.SetPiece(newPiece);
 
         // destroy pawn
         Destroy(pawn.gameObject);
+    }
+
+    // existing auto-queen (you can keep it as a wrapper)
+    private void PromotePawnToQueen(Pawn pawn, Vector2Int pos)
+    {
+        PromotePawn(pawn, PieceType.Queen);
     }
 
     public void RaiseKingInCheck(PieceColor kingColor)

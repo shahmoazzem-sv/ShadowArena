@@ -67,8 +67,8 @@ MonoBehaviour:
   - hasPiece: 0
     pieceType: 0
     pieceColor: 0
-  - hasPiece: 0
-    pieceType: 0
+  - hasPiece: 1
+    pieceType: 1
     pieceColor: 0
   - hasPiece: 0
     pieceType: 0
