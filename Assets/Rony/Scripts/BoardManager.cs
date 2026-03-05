@@ -51,6 +51,7 @@ public class BoardManager : MonoBehaviour
         public Vector2Int to;
         public ChessPiece captured; // could be null
         public bool wasDoublePawnPush;
+        public bool wasEnPassant;
     }
     public MoveRecord? LastMove = null;
 
@@ -124,8 +125,11 @@ public class BoardManager : MonoBehaviour
         }
 
         // Check against legal moves (we already compute legal moves when selecting but re-check to be safe)
-        List<Vector2Int> legal = GetLegalMoves(selectedPiece);
-        bool isValid = legal.Count == 0 ? IsDropToEmptyCellAllowed(dropGridPos) : legal.Contains(dropGridPos);
+        // List<Vector2Int> legal = GetLegalMoves(selectedPiece);
+        // bool isValid = legal.Count == 0 ? IsDropToEmptyCellAllowed(dropGridPos) : legal.Contains(dropGridPos);
+        // bool isValid = legal.Contains(dropGridPos);
+
+        bool isValid = selectedPieceValidMoves.Contains(dropGridPos);
 
         if (!isValid)
         {
@@ -353,9 +357,32 @@ public class BoardManager : MonoBehaviour
         BoardCell toCell = gridSystem.GetGridObject(to.x, to.y);
 
         ChessPiece captured = null;
+        bool wasEnPassant = false;
+
+        // check for normal capture on destination
         if (toCell != null)
         {
             captured = toCell.GetPiece();
+        }
+
+        // En-passant simulation: pawn moving diagonally into an empty cell captures pawn behind
+        if (captured == null && piece is Pawn && from.x != to.x)
+        {
+            // captured pawn location is at (to.x, from.y)
+            BoardCell epCell = gridSystem.GetGridObject(to.x, from.y);
+            if (epCell != null)
+            {
+                ChessPiece possible = epCell.GetPiece();
+                if (possible != null && possible is Pawn && possible.pieceColor != piece.pieceColor)
+                {
+                    // the pseudo-legal move list would only include this ep move if last move double-pushed; 
+                    // but for safety, we allow simulation to treat it as a capture if the pawn exists
+                    captured = possible;
+                    wasEnPassant = true;
+                    // remove captured from its cell in simulation
+                    epCell.SetPiece(null);
+                }
+            }
         }
 
         // perform move in data only (do not touch transforms)
@@ -364,7 +391,15 @@ public class BoardManager : MonoBehaviour
 
         piece.currentGridPosition = to;
 
-        MoveRecord rec = new MoveRecord { piece = piece, from = from, to = to, captured = captured, wasDoublePawnPush = (piece is Pawn) && Mathf.Abs(to.y - from.y) == 2 };
+        MoveRecord rec = new MoveRecord
+        {
+            piece = piece,
+            from = from,
+            to = to,
+            captured = captured,
+            wasDoublePawnPush = (piece is Pawn) && Mathf.Abs(to.y - from.y) == 2,
+            wasEnPassant = wasEnPassant
+        };
         return rec;
     }
 
@@ -384,10 +419,18 @@ public class BoardManager : MonoBehaviour
         // restore captured
         if (rec.captured != null)
         {
-            // put captured back at rec.to
-            if (toCell != null) toCell.SetPiece(rec.captured);
-            // NOTE: captured GameObject must not have been destroyed during simulation (we never destroy while simulating)
-            // if you destroy on actual move you cannot restore in simulation; simulation approach keeps objects intact.
+            if (rec.wasEnPassant)
+            {
+                // captured pawn was on rec.to.x, rec.from.y
+                BoardCell epCell = gridSystem.GetGridObject(rec.to.x, rec.from.y);
+                if (epCell != null) epCell.SetPiece(rec.captured);
+            }
+            else
+            {
+                // put captured back at rec.to
+                if (toCell != null) toCell.SetPiece(rec.captured);
+            }
+            // NOTE: we do not destroy or recreate objects during simulation; just reattach them to cells.
         }
     }
 
