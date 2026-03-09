@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 
 public enum GameState
@@ -16,6 +17,14 @@ public class GameManager : MonoBehaviour
     // Which king (if any) is currently checked. null = no king in check.
     public PieceColor? CheckedKing { get; private set; } = null;
 
+    [Header("Game History")]
+    public int FullMoveNumber { get; private set; } = 1;
+    public int HalfMoveClock { get; private set; } = 0;
+    public string CurrentFEN { get; private set; }
+
+    // Stores the sequence of SAN strings (e.g., ["e4", "e5", "Nf3"])
+    public List<string> PgnMoves { get; private set; } = new List<string>();
+
     private void Awake()
     {
         // Standard Singleton setup
@@ -30,6 +39,35 @@ public class GameManager : MonoBehaviour
         }
         // Set a safe default early so other Start() methods can rely on it if needed.
         CurrentState = GameState.Initializing;
+    }
+
+
+    // Call this to initialize the FEN at the very start of the game
+    public void InitializeHistory(string startingFEN)
+    {
+        CurrentFEN = startingFEN;
+        FullMoveNumber = 1;
+        HalfMoveClock = 0;
+        PgnMoves.Clear();
+    }
+
+    // Called by BoardManager after a move is finalized
+    public void RecordMoveInfo(string san, string fen, bool isPawnMoveOrCapture)
+    {
+        PgnMoves.Add(san);
+        CurrentFEN = fen;
+
+        // FEN Rules: HalfMoveClock resets to 0 on a pawn move or capture. Otherwise increments.
+        if (isPawnMoveOrCapture) HalfMoveClock = 0;
+        else HalfMoveClock++;
+
+        // FEN Rules: FullMove increments ONLY after Black completes their turn
+        if (CurrentState == GameState.BlackTurn) FullMoveNumber++;
+
+        // Optional: Trigger a UI event here
+        Debug.Log($"<color=orange>Move {FullMoveNumber}: {san} | FEN: {CurrentFEN}</color>");
+
+        // here we can update the move history❌❌❌❌❌❌
     }
 
     private void OnEnable()
@@ -99,6 +137,12 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("EndTurn called while not in a player-turn state.");
         }
     }
+
+    // UI HELPER: Get the exact string for the UI (e.g. "Move 5")
+    public string GetUIMoveNumber() => $"Move {FullMoveNumber}";
+
+    // UI HELPER: Get the last move PGN text
+    public string GetUILastMove() => PgnMoves.Count > 0 ? PgnMoves[PgnMoves.Count - 1] : "None";
 
 
 }

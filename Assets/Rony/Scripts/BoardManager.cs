@@ -306,26 +306,60 @@ public class BoardManager : MonoBehaviour
         // cleanup visuals
         DeleteAllValidMoveShowers();
 
-        // Recompute check and checkmate
+        // 1. Calculate check and checkmate status for the NEXT player to build the SAN string
+        PieceColor nextPlayer = (GameManager.Instance.CurrentState == GameState.WhiteTurn) ? PieceColor.Black : PieceColor.White;
+        bool inCheck = IsKingInCheck(nextPlayer);
+        bool hasAnyLegal = HasAnyLegalMoveForColor(nextPlayer);
+        bool isCheckmate = inCheck && !hasAnyLegal;
+
+        // 2. Generate the SAN string for this move
+        // (If you implemented promotion, pass the promoted PieceType here instead of null)
+        string moveSAN = ChessNotation.GetSAN(this, rec, inCheck, isCheckmate, null);
+
+        // 3. Update the Board Check Status
         UpdateCheckStatus();
 
-        // End turn and test for checkmate on next player
+        // 4. Record the move in GameManager before ending the turn
+        bool resetHalfMove = (selectedPiece is Pawn) || (rec.captured != null) || rec.wasEnPassant;
+
+        // Pass the updated FEN to the Game Manager
+        string newFEN = ChessNotation.GetFEN(this, nextPlayer, GameManager.Instance.HalfMoveClock, GameManager.Instance.FullMoveNumber);
+
+        GameManager.Instance.RecordMoveInfo(moveSAN, newFEN, resetHalfMove);
+
+        // 5. End Turn & Handle Game Over
         GameManager.Instance.EndTurn();
 
-        // After turn flip, check for checkmate for the new current player
-        PieceColor next = (GameManager.Instance.CurrentState == GameState.WhiteTurn) ? PieceColor.White : PieceColor.Black;
-        bool inCheck = IsKingInCheck(next);
-        bool hasAnyLegal = HasAnyLegalMoveForColor(next);
-
-        if (inCheck && !hasAnyLegal)
+        if (isCheckmate)
         {
-            // checkmate
-            Debug.Log($"{next} is checkmated!");
+            Debug.Log($"{nextPlayer} is checkmated!");
             GameManager.Instance.ChangeState(GameState.GameOver);
         }
 
-        // Clear selection
         ClearSelection();
+
+        //----------------------------------------------------
+
+        // Recompute check and checkmate
+        // UpdateCheckStatus();
+
+        // // End turn and test for checkmate on next player
+        // GameManager.Instance.EndTurn();
+
+        // // After turn flip, check for checkmate for the new current player
+        // PieceColor next = (GameManager.Instance.CurrentState == GameState.WhiteTurn) ? PieceColor.White : PieceColor.Black;
+        // bool inCheck = IsKingInCheck(next);
+        // bool hasAnyLegal = HasAnyLegalMoveForColor(next);
+
+        // if (inCheck && !hasAnyLegal)
+        // {
+        //     // checkmate
+        //     Debug.Log($"{next} is checkmated!");
+        //     GameManager.Instance.ChangeState(GameState.GameOver);
+        // }
+
+        // // Clear selection
+        // ClearSelection();
     }
 
     // Promote pawn to queen (simple automatic promotion)
@@ -692,6 +726,8 @@ public class BoardManager : MonoBehaviour
     {
 
         SetupBoard(useCustomSetup ? customSetupAsset : null);
+        string startFEN = ChessNotation.GetFEN(this, PieceColor.White, 0, 1);
+        GameManager.Instance.InitializeHistory(startFEN);
         // SpawnRowOfPawns(1, PieceColor.White);
         // SpawnMajorPieces(0, PieceColor.White);
 
