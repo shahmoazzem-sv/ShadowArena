@@ -520,6 +520,90 @@ public class BoardManager : MonoBehaviour
     // Simulation & legal-move filtering
     // -------------------------
     // Simulate a move and return a MoveRecord that can be used to undo.
+    // public MoveRecord SimulateMove(ChessPiece piece, Vector2Int to)
+    // {
+    //     Vector2Int from = piece.currentGridPosition;
+    //     BoardCell fromCell = gridSystem.GetGridObject(from.x, from.y);
+    //     BoardCell toCell = gridSystem.GetGridObject(to.x, to.y);
+
+    //     ChessPiece captured = null;
+    //     bool wasEnPassant = false;
+
+    //     // check for normal capture on destination
+    //     if (toCell != null)
+    //     {
+    //         captured = toCell.GetPiece();
+    //     }
+
+    //     // En-passant simulation: pawn moving diagonally into an empty cell captures pawn behind
+    //     if (captured == null && piece is Pawn && from.x != to.x)
+    //     {
+    //         // captured pawn location is at (to.x, from.y)
+    //         BoardCell epCell = gridSystem.GetGridObject(to.x, from.y);
+    //         if (epCell != null)
+    //         {
+    //             ChessPiece possible = epCell.GetPiece();
+    //             if (possible != null && possible is Pawn && possible.pieceColor != piece.pieceColor)
+    //             {
+    //                 // the pseudo-legal move list would only include this ep move if last move double-pushed; 
+    //                 // but for safety, we allow simulation to treat it as a capture if the pawn exists
+    //                 captured = possible;
+    //                 wasEnPassant = true;
+    //                 // remove captured from its cell in simulation
+    //                 epCell.SetPiece(null);
+    //             }
+    //         }
+    //     }
+
+    //     // perform move in data only (do not touch transforms)
+    //     if (fromCell != null && fromCell.GetPiece() == piece) fromCell.SetPiece(null);
+    //     if (toCell != null) toCell.SetPiece(piece);
+
+    //     piece.currentGridPosition = to;
+
+    //     MoveRecord rec = new MoveRecord
+    //     {
+    //         piece = piece,
+    //         from = from,
+    //         to = to,
+    //         captured = captured,
+    //         wasDoublePawnPush = (piece is Pawn) && Mathf.Abs(to.y - from.y) == 2,
+    //         wasEnPassant = wasEnPassant
+    //     };
+    //     return rec;
+    // }
+
+    // // Undo simulation (must be called with the record returned by SimulateMove)
+    // public void UndoSimulatedMove(MoveRecord rec)
+    // {
+    //     // rec.piece is currently at rec.to
+    //     BoardCell fromCell = gridSystem.GetGridObject(rec.from.x, rec.from.y);
+    //     BoardCell toCell = gridSystem.GetGridObject(rec.to.x, rec.to.y);
+
+    //     // remove piece from dest cell and put back to origin
+    //     if (toCell != null && toCell.GetPiece() == rec.piece) toCell.SetPiece(null);
+    //     if (fromCell != null) fromCell.SetPiece(rec.piece);
+
+    //     rec.piece.currentGridPosition = rec.from;
+
+    //     // restore captured
+    //     if (rec.captured != null)
+    //     {
+    //         if (rec.wasEnPassant)
+    //         {
+    //             // captured pawn was on rec.to.x, rec.from.y
+    //             BoardCell epCell = gridSystem.GetGridObject(rec.to.x, rec.from.y);
+    //             if (epCell != null) epCell.SetPiece(rec.captured);
+    //         }
+    //         else
+    //         {
+    //             // put captured back at rec.to
+    //             if (toCell != null) toCell.SetPiece(rec.captured);
+    //         }
+    //         // NOTE: we do not destroy or recreate objects during simulation; just reattach them to cells.
+    //     }
+    // }
+
     public MoveRecord SimulateMove(ChessPiece piece, Vector2Int to)
     {
         Vector2Int from = piece.currentGridPosition;
@@ -529,33 +613,35 @@ public class BoardManager : MonoBehaviour
         ChessPiece captured = null;
         bool wasEnPassant = false;
 
-        // check for normal capture on destination
+        // Normal capture on destination
         if (toCell != null)
         {
             captured = toCell.GetPiece();
+            if (captured != null)
+            {
+                // detach captured from its cell for simulation
+                toCell.SetPiece(null);
+            }
         }
 
         // En-passant simulation: pawn moving diagonally into an empty cell captures pawn behind
         if (captured == null && piece is Pawn && from.x != to.x)
         {
-            // captured pawn location is at (to.x, from.y)
             BoardCell epCell = gridSystem.GetGridObject(to.x, from.y);
             if (epCell != null)
             {
                 ChessPiece possible = epCell.GetPiece();
+                // Only treat as en-passant capture if there's a pawn there of opposite color
                 if (possible != null && possible is Pawn && possible.pieceColor != piece.pieceColor)
                 {
-                    // the pseudo-legal move list would only include this ep move if last move double-pushed; 
-                    // but for safety, we allow simulation to treat it as a capture if the pawn exists
                     captured = possible;
                     wasEnPassant = true;
-                    // remove captured from its cell in simulation
-                    epCell.SetPiece(null);
+                    epCell.SetPiece(null); // remove for simulation
                 }
             }
         }
 
-        // perform move in data only (do not touch transforms)
+        // move the piece in the board model (no transforms)
         if (fromCell != null && fromCell.GetPiece() == piece) fromCell.SetPiece(null);
         if (toCell != null) toCell.SetPiece(piece);
 
@@ -573,34 +659,34 @@ public class BoardManager : MonoBehaviour
         return rec;
     }
 
-    // Undo simulation (must be called with the record returned by SimulateMove)
     public void UndoSimulatedMove(MoveRecord rec)
     {
-        // rec.piece is currently at rec.to
         BoardCell fromCell = gridSystem.GetGridObject(rec.from.x, rec.from.y);
         BoardCell toCell = gridSystem.GetGridObject(rec.to.x, rec.to.y);
 
-        // remove piece from dest cell and put back to origin
+        // remove piece from dest cell if it's our moved piece
         if (toCell != null && toCell.GetPiece() == rec.piece) toCell.SetPiece(null);
-        if (fromCell != null) fromCell.SetPiece(rec.piece);
 
+        // put piece back to original cell
+        if (fromCell != null) fromCell.SetPiece(rec.piece);
         rec.piece.currentGridPosition = rec.from;
 
-        // restore captured
+        // restore captured piece if any
         if (rec.captured != null)
         {
             if (rec.wasEnPassant)
             {
-                // captured pawn was on rec.to.x, rec.from.y
+                // captured pawn belongs on rec.to.x, rec.from.y
                 BoardCell epCell = gridSystem.GetGridObject(rec.to.x, rec.from.y);
                 if (epCell != null) epCell.SetPiece(rec.captured);
+                rec.captured.currentGridPosition = new Vector2Int(rec.to.x, rec.from.y);
             }
             else
             {
                 // put captured back at rec.to
                 if (toCell != null) toCell.SetPiece(rec.captured);
+                rec.captured.currentGridPosition = rec.to;
             }
-            // NOTE: we do not destroy or recreate objects during simulation; just reattach them to cells.
         }
     }
 
@@ -673,30 +759,126 @@ public class BoardManager : MonoBehaviour
     }
 
     // Determine if a king of given color is currently in check (attacked by any opposing pseudo-legal moves)
+    // public bool IsKingInCheck(PieceColor kingColor)
+    // {
+    //     if (!TryGetKingPosition(kingColor, out Vector2Int kingPos)) return false;
+
+    //     PieceColor attackerColor = (kingColor == PieceColor.White) ? PieceColor.Black : PieceColor.White;
+
+    //     for (int x = 0; x < boardSize; x++)
+    //     {
+    //         for (int y = 0; y < boardSize; y++)
+    //         {
+    //             BoardCell c = gridSystem.GetGridObject(x, y);
+    //             ChessPiece p = c.GetPiece();
+    //             if (p == null || p.pieceColor != attackerColor) continue;
+
+    //             // Use pseudo-legal moves (attacks) to see if king square is reachable
+    //             List<Vector2Int> attacks = p.GetValidMoves(this);
+    //             if (attacks != null && attacks.Contains(kingPos))
+    //             {
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
+
+    // Robust attacker test: returns true if square is attacked by 'byColor'
+    public bool IsSquareAttacked(Vector2Int square, PieceColor byColor)
+    {
+        // Pawn attacks
+        int pawnDir = (byColor == PieceColor.White) ? 1 : -1;
+        Vector2Int[] pawnAttacks = new Vector2Int[] { new Vector2Int(1, pawnDir), new Vector2Int(-1, pawnDir) };
+        foreach (var d in pawnAttacks)
+        {
+            Vector2Int p = square + d;
+            if (!IsInBounds(p)) continue;
+            ChessPiece cp = GetPieceAt(p);
+            if (cp != null && cp.pieceColor == byColor && cp.pieceType == PieceType.Pawn)
+                return true;
+        }
+
+        // Knights
+        Vector2Int[] knightOffsets = new Vector2Int[]
+        {
+        new Vector2Int(1,2), new Vector2Int(2,1), new Vector2Int(-1,2), new Vector2Int(-2,1),
+        new Vector2Int(1,-2), new Vector2Int(2,-1), new Vector2Int(-1,-2), new Vector2Int(-2,-1)
+        };
+        foreach (var o in knightOffsets)
+        {
+            Vector2Int p = square + o;
+            if (!IsInBounds(p)) continue;
+            ChessPiece cp = GetPieceAt(p);
+            if (cp != null && cp.pieceColor == byColor && cp.pieceType == PieceType.Knight)
+                return true;
+        }
+
+        // King adjacency (opponent king can't be next to your king)
+        Vector2Int[] kingOffsets = new Vector2Int[]
+        {
+        new Vector2Int(1,0), new Vector2Int(-1,0), new Vector2Int(0,1), new Vector2Int(0,-1),
+        new Vector2Int(1,1), new Vector2Int(1,-1), new Vector2Int(-1,1), new Vector2Int(-1,-1)
+        };
+        foreach (var o in kingOffsets)
+        {
+            Vector2Int p = square + o;
+            if (!IsInBounds(p)) continue;
+            ChessPiece cp = GetPieceAt(p);
+            if (cp != null && cp.pieceColor == byColor && cp.pieceType == PieceType.King)
+                return true;
+        }
+
+        // Sliding pieces: rook/queen (orthogonal)
+        Vector2Int[] orthDirs = new Vector2Int[] { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) };
+        foreach (var dir in orthDirs)
+        {
+            Vector2Int p = square + dir;
+            while (IsInBounds(p))
+            {
+                ChessPiece cp = GetPieceAt(p);
+                if (cp != null)
+                {
+                    if (cp.pieceColor == byColor && (cp.pieceType == PieceType.Rook || cp.pieceType == PieceType.Queen))
+                        return true;
+                    // blocked by any piece
+                    break;
+                }
+                p += dir;
+            }
+        }
+
+        // Sliding pieces: bishop/queen (diagonals)
+        Vector2Int[] diagDirs = new Vector2Int[] { new Vector2Int(1, 1), new Vector2Int(1, -1), new Vector2Int(-1, 1), new Vector2Int(-1, -1) };
+        foreach (var dir in diagDirs)
+        {
+            Vector2Int p = square + dir;
+            while (IsInBounds(p))
+            {
+                ChessPiece cp = GetPieceAt(p);
+                if (cp != null)
+                {
+                    if (cp.pieceColor == byColor && (cp.pieceType == PieceType.Bishop || cp.pieceType == PieceType.Queen))
+                        return true;
+                    // blocked
+                    break;
+                }
+                p += dir;
+            }
+        }
+
+        return false;
+    }
+
+    // Replace existing IsKingInCheck with this simple wrapper:
     public bool IsKingInCheck(PieceColor kingColor)
     {
         if (!TryGetKingPosition(kingColor, out Vector2Int kingPos)) return false;
-
         PieceColor attackerColor = (kingColor == PieceColor.White) ? PieceColor.Black : PieceColor.White;
-
-        for (int x = 0; x < boardSize; x++)
-        {
-            for (int y = 0; y < boardSize; y++)
-            {
-                BoardCell c = gridSystem.GetGridObject(x, y);
-                ChessPiece p = c.GetPiece();
-                if (p == null || p.pieceColor != attackerColor) continue;
-
-                // Use pseudo-legal moves (attacks) to see if king square is reachable
-                List<Vector2Int> attacks = p.GetValidMoves(this);
-                if (attacks != null && attacks.Contains(kingPos))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return IsSquareAttacked(kingPos, attackerColor);
     }
+
+
 
     private void UpdateCheckStatus()
     {

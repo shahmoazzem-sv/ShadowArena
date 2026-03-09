@@ -29,6 +29,9 @@ public class GameManager : MonoBehaviour
 
     // Action passes: (FullMoveNumber, SAN string, isWhiteTurn)
     public event Action<int, string, bool> OnMoveRecorded;
+    public event Action<PieceColor> OnKingChecked;    // invoked when a king is found to be in check
+    public event Action OnKingCleared;                // invoked when no king is in check anymore
+    public event Action<PieceColor> OnGameOver;       // invoked when game state moves to GameOver (passes checked king color)
 
     private void Awake()
     {
@@ -106,6 +109,14 @@ public class GameManager : MonoBehaviour
 
         // Here you can trigger events based on state changes later
         // e.g., if (newState == GameState.WhiteTurn) UIManager.UpdateTurnText("White's Turn");
+        // If game becomes GameOver, fire OnGameOver with the currently checked king (if any).
+        if (newState == GameState.GameOver)
+        {
+            if (CheckedKing.HasValue)
+                OnGameOver?.Invoke(CheckedKing.Value);
+            else
+                OnGameOver?.Invoke(PieceColor.White); // fallback if you want a default (optional)
+        }
     }
 
     private void HandleKingInCheck(PieceColor kingColor)
@@ -115,6 +126,8 @@ public class GameManager : MonoBehaviour
         CheckedKing = kingColor;
 
         // You may want to show UI, sound, etc.
+        // UI / sound hooks:
+        OnKingChecked?.Invoke(kingColor);
     }
 
     // Clear or set the checked king programmatically (used by BoardManager.UpdateCheckStatus)
@@ -124,10 +137,13 @@ public class GameManager : MonoBehaviour
         if (color == null)
         {
             Debug.Log("No king is in check.");
+            OnKingCleared?.Invoke();
         }
         else
         {
             Debug.Log($"{color} king is in check (SetCheckedKing).");
+            OnKingChecked?.Invoke(color.Value);
+
         }
     }
 
