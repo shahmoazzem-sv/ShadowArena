@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 
 public enum GameState
@@ -24,6 +25,10 @@ public class GameManager : MonoBehaviour
 
     // Stores the sequence of SAN strings (e.g., ["e4", "e5", "Nf3"])
     public List<string> PgnMoves { get; private set; } = new List<string>();
+
+
+    // Action passes: (FullMoveNumber, SAN string, isWhiteTurn)
+    public event Action<int, string, bool> OnMoveRecorded;
 
     private void Awake()
     {
@@ -61,13 +66,19 @@ public class GameManager : MonoBehaviour
         if (isPawnMoveOrCapture) HalfMoveClock = 0;
         else HalfMoveClock++;
 
+        // Capture state before incrementing FullMoveNumber for UI purposes
+        bool wasWhiteMove = (CurrentState == GameState.WhiteTurn);
+
+        // Notify History Board BEFORE we increment the FullMoveNumber if it was black's turn
+        OnMoveRecorded?.Invoke(FullMoveNumber, san, wasWhiteMove);
+
         // FEN Rules: FullMove increments ONLY after Black completes their turn
         if (CurrentState == GameState.BlackTurn) FullMoveNumber++;
 
         // Optional: Trigger a UI event here
         Debug.Log($"<color=orange>Move {FullMoveNumber}: {san} | FEN: {CurrentFEN}</color>");
 
-        // here we can update the move history❌❌❌❌❌❌
+
     }
 
     private void OnEnable()
@@ -126,6 +137,7 @@ public class GameManager : MonoBehaviour
         if (CurrentState == GameState.WhiteTurn)
         {
             ChangeState(GameState.BlackTurn);
+
         }
         else if (CurrentState == GameState.BlackTurn)
         {
@@ -143,6 +155,9 @@ public class GameManager : MonoBehaviour
 
     // UI HELPER: Get the last move PGN text
     public string GetUILastMove() => PgnMoves.Count > 0 ? PgnMoves[PgnMoves.Count - 1] : "None";
+
+    public bool IsWhiteTurn() => CurrentState == GameState.WhiteTurn ? true : false;
+
 
 
 }
