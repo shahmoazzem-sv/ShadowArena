@@ -10,6 +10,9 @@ public enum GameState
     BlackTurn,
     GameOver
 }
+
+public enum PlayerType { Human, Bot, Network }
+public enum GameMode { HumanVsHuman, HumanVsBot, BotVsBot, Networked }
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
@@ -32,6 +35,15 @@ public class GameManager : MonoBehaviour
     public event Action<PieceColor> OnKingChecked;    // invoked when a king is found to be in check
     public event Action OnKingCleared;                // invoked when no king is in check anymore
     public event Action<PieceColor> OnGameOver;       // invoked when game state moves to GameOver (passes checked king color)
+
+
+    [Header("Player Setup")]
+    public GameMode CurrentGameMode = GameMode.HumanVsBot;
+    public PlayerType WhitePlayer = PlayerType.Human;
+    public PlayerType BlackPlayer = PlayerType.Bot;
+
+    // fired whenever a new turn begins (argument = color to move)
+    public event Action<PieceColor> OnTurnStarted;
 
     private void Awake()
     {
@@ -153,11 +165,13 @@ public class GameManager : MonoBehaviour
         if (CurrentState == GameState.WhiteTurn)
         {
             ChangeState(GameState.BlackTurn);
+            OnTurnStarted?.Invoke(PieceColor.Black);
 
         }
         else if (CurrentState == GameState.BlackTurn)
         {
             ChangeState(GameState.WhiteTurn);
+            OnTurnStarted?.Invoke(PieceColor.White);
         }
         else
         {
@@ -174,6 +188,51 @@ public class GameManager : MonoBehaviour
 
     public bool IsWhiteTurn() => CurrentState == GameState.WhiteTurn ? true : false;
 
+    //AI helper 
+    public bool IsBotTurn()
+    {
+        if (CurrentState == GameState.WhiteTurn) return WhitePlayer == PlayerType.Bot;
+        if (CurrentState == GameState.BlackTurn) return BlackPlayer == PlayerType.Bot;
+        return false;
+    }
+    public PieceColor GetCurrentTurnColor()
+    {
+        if (CurrentState == GameState.WhiteTurn) return PieceColor.White;
+        if (CurrentState == GameState.BlackTurn) return PieceColor.Black;
+        return PieceColor.White; // fallback
+    }
+
+    // Try to perform the move; returns true on success.
+    public bool TryMakeMove(ChessPiece piece, Vector2Int to)
+    {
+        // Safety checks
+        if (piece == null) return false;
+        PieceColor turnColor = GetCurrentTurnColor();
+        if (piece.pieceColor != turnColor)
+        {
+            Debug.LogWarning("TryMakeMove: attempted to move when it's not the piece's turn.");
+            return false;
+        }
+
+        // Ask BoardManager for legal moves (should already filter by check/pins)
+        var legal = BoardManager.Instance.GetLegalMoves(piece);
+        if (legal == null || legal.Count == 0) return false;
+        if (!legal.Contains(to)) return false;
+
+        // Perform the move via BoardManager (BoardManager should perform model update & animations)
+        bool moved = BoardManager.Instance.TryMovePiece(piece, to); // implement helper below
+        if (!moved) return false;
+
+        string fen = CurrentFEN;
+        string san = "?";
+        bool isPawnOrCapture = false;
+
+
+        RecordMoveInfo(san ?? "?", fen ?? CurrentFEN, isPawnOrCapture);
+        EndTurn();
+
+        return true;
+    }
 
 
 }

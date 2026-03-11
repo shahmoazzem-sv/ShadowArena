@@ -1051,4 +1051,51 @@ public class BoardManager : MonoBehaviour
         BoardCell cell = gridSystem.GetGridObject(gridPos.x, gridPos.y);
         return cell != null ? cell.GetPiece() : null;
     }
+
+
+    // in BoardManager
+    public bool TryMovePiece(ChessPiece piece, Vector2Int to)
+    {
+        if (piece == null) return false;
+
+        var legal = GetLegalMoves(piece);
+        if (legal == null || !legal.Contains(to)) return false;
+
+        // Move piece directly (bot move)
+        BoardCell origin = gridSystem.GetGridObject(piece.currentGridPosition.x, piece.currentGridPosition.y);
+        BoardCell dest = gridSystem.GetGridObject(to.x, to.y);
+
+        ChessPiece captured = dest.GetPiece();
+        if (captured != null)
+            Destroy(captured.gameObject);
+
+        origin.SetPiece(null);
+
+        piece.currentGridPosition = to;
+        piece.transform.position = gridSystem.GetCellBottomCenterWorldPosition(to.x, to.y);
+
+        dest.SetPiece(piece);
+
+        piece.hasMoved = true;
+
+        return true;
+    }
+    public List<ChessPiece> GetPieces(PieceColor color)
+    {
+        List<ChessPiece> pieces = new List<ChessPiece>();
+
+        for (int x = 0; x < boardSize; x++)
+        {
+            for (int y = 0; y < boardSize; y++)
+            {
+                BoardCell c = gridSystem.GetGridObject(x, y);
+                ChessPiece p = c.GetPiece();
+
+                if (p != null && p.pieceColor == color)
+                    pieces.Add(p);
+            }
+        }
+
+        return pieces;
+    }
 }

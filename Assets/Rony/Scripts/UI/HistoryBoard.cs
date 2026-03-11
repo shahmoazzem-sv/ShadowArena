@@ -10,7 +10,7 @@ public class HistoryBoard : MonoBehaviour
 
     void Awake()
     {
-        if (Instance == null && Instance != this)
+        if (Instance == null)
         {
             Instance = this;
         }
@@ -35,7 +35,7 @@ public class HistoryBoard : MonoBehaviour
 
     void Start()
     {
-        currentActivePanel = Instantiate(historyPanelPrefab, historyPanelParent);
+
     }
 
 
