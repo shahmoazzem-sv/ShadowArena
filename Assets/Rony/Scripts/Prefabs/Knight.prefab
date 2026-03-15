@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2894458875885058393}
   - component: {fileID: 5799304850181409881}
   - component: {fileID: 8277941593097164593}
+  - component: {fileID: -3108180447036738912}
   m_Layer: 0
   m_Name: Knight
   m_TagString: Untagged
@@ -108,3 +109,18 @@ MonoBehaviour:
   pieceColor: 0
   pieceType: 0
   currentGridPosition: {x: 0, y: 0}
+  hasMoved: 0
+--- !u!114 &-3108180447036738912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3985593891166015543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ad08dc954c056c4e8b484b84c0b621d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OrderY
+  _baseOrder: 5
+  _precision: 100

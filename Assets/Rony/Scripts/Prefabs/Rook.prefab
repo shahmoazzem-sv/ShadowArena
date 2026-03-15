@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 9131102105720179746}
   - component: {fileID: 1477008889730522502}
   - component: {fileID: 5006804205772098996}
+  - component: {fileID: -7070026503893035581}
   m_Layer: 0
   m_Name: Rook
   m_TagString: Untagged
@@ -108,3 +109,18 @@ MonoBehaviour:
   pieceColor: 0
   pieceType: 0
   currentGridPosition: {x: 0, y: 0}
+  hasMoved: 0
+--- !u!114 &-7070026503893035581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6032997845833793181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ad08dc954c056c4e8b484b84c0b621d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OrderY
+  _baseOrder: 5
+  _precision: 100
