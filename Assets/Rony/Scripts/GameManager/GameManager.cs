@@ -35,7 +35,7 @@ public class GameManager : MonoBehaviour
     public event Action<PieceColor> OnKingChecked;    // invoked when a king is found to be in check
     public event Action OnKingCleared;                // invoked when no king is in check anymore
     public event Action<PieceColor> OnGameOver;       // invoked when game state moves to GameOver (passes checked king color)
-    public event Action<PieceColor> OnInvalidMoveInCheck; 
+    public event Action<PieceColor> OnInvalidMoveInCheck;
 
 
     [Header("Player Setup")]
@@ -158,7 +158,7 @@ public class GameManager : MonoBehaviour
         // UI / sound hooks:
         OnKingChecked?.Invoke(kingColor);
     }
-    
+
     public void TriggerInvalidMoveInCheck(PieceColor color)
     {
         OnInvalidMoveInCheck?.Invoke(color);
@@ -243,7 +243,7 @@ public class GameManager : MonoBehaviour
 
         // Perform the move via BoardManager (BoardManager should perform model update & animations)
         // BoardManager handles all logging, history updates, and ending turns now.
-        bool moved = BoardManager.Instance.TryMovePiece(piece, to); 
+        bool moved = BoardManager.Instance.TryMovePiece(piece, to);
         if (!moved) return false;
 
         return true;
