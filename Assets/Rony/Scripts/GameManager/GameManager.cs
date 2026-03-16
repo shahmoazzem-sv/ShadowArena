@@ -35,12 +35,18 @@ public class GameManager : MonoBehaviour
     public event Action<PieceColor> OnKingChecked;    // invoked when a king is found to be in check
     public event Action OnKingCleared;                // invoked when no king is in check anymore
     public event Action<PieceColor> OnGameOver;       // invoked when game state moves to GameOver (passes checked king color)
+    public event Action<PieceColor> OnInvalidMoveInCheck; 
 
 
     [Header("Player Setup")]
     public GameMode CurrentGameMode = GameMode.HumanVsBot;
     public PlayerType WhitePlayer = PlayerType.Human;
     public PlayerType BlackPlayer = PlayerType.Bot;
+
+    // Static variables to pass setup from Main Menu to Game scene
+    public static GameMode? PendingGameMode = null;
+    public static PlayerType? PendingWhitePlayer = null;
+    public static PlayerType? PendingBlackPlayer = null;
 
     // fired whenever a new turn begins (argument = color to move)
     public event Action<PieceColor> OnTurnStarted;
@@ -57,6 +63,17 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+        // Apply pending setup from Main Menu if it exists
+        if (PendingGameMode.HasValue) CurrentGameMode = PendingGameMode.Value;
+        if (PendingWhitePlayer.HasValue) WhitePlayer = PendingWhitePlayer.Value;
+        if (PendingBlackPlayer.HasValue) BlackPlayer = PendingBlackPlayer.Value;
+
+        // Reset so they don't affect future game plays directly started from editor
+        PendingGameMode = null;
+        PendingWhitePlayer = null;
+        PendingBlackPlayer = null;
+
         // Set a safe default early so other Start() methods can rely on it if needed.
         CurrentState = GameState.Initializing;
     }
@@ -141,6 +158,11 @@ public class GameManager : MonoBehaviour
         // UI / sound hooks:
         OnKingChecked?.Invoke(kingColor);
     }
+    
+    public void TriggerInvalidMoveInCheck(PieceColor color)
+    {
+        OnInvalidMoveInCheck?.Invoke(color);
+    }
 
     // Clear or set the checked king programmatically (used by BoardManager.UpdateCheckStatus)
     public void SetCheckedKing(PieceColor? color)
@@ -220,16 +242,9 @@ public class GameManager : MonoBehaviour
         if (!legal.Contains(to)) return false;
 
         // Perform the move via BoardManager (BoardManager should perform model update & animations)
-        bool moved = BoardManager.Instance.TryMovePiece(piece, to); // implement helper below
+        // BoardManager handles all logging, history updates, and ending turns now.
+        bool moved = BoardManager.Instance.TryMovePiece(piece, to); 
         if (!moved) return false;
-
-        string fen = CurrentFEN;
-        string san = "?";
-        bool isPawnOrCapture = false;
-
-
-        RecordMoveInfo(san ?? "?", fen ?? CurrentFEN, isPawnOrCapture);
-        EndTurn();
 
         return true;
     }

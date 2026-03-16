@@ -39,6 +39,7 @@ public class NotificationPanel : MonoBehaviour
             GameManager.Instance.OnKingChecked += OnKingChecked;
             GameManager.Instance.OnKingCleared += OnKingCleared;
             GameManager.Instance.OnGameOver += OnGameOver;
+            GameManager.Instance.OnInvalidMoveInCheck += OnKingChecked;
         }
     }
 
@@ -49,6 +50,7 @@ public class NotificationPanel : MonoBehaviour
             GameManager.Instance.OnKingChecked -= OnKingChecked;
             GameManager.Instance.OnKingCleared -= OnKingCleared;
             GameManager.Instance.OnGameOver -= OnGameOver;
+            GameManager.Instance.OnInvalidMoveInCheck -= OnKingChecked;
         }
     }
 
@@ -77,11 +79,7 @@ public class NotificationPanel : MonoBehaviour
     {
         string c = checkedKing == PieceColor.White ? "White" : "Black";
         ShowMessage($"{c} is checkmated! Game Over");
-        // keep message longer
-        DOVirtual.DelayedCall(checkmateStay, () =>
-        {
-            PopDown();
-        });
+        // Keep message permanently displayed per request
     }
 
     // Public API — optional if you want to call manually elsewhere

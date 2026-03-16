@@ -127,207 +127,36 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
-        // Check against legal moves (we already compute legal moves when selecting but re-check to be safe)
-        // List<Vector2Int> legal = GetLegalMoves(selectedPiece);
-        // bool isValid = legal.Count == 0 ? IsDropToEmptyCellAllowed(dropGridPos) : legal.Contains(dropGridPos);
-        // bool isValid = legal.Contains(dropGridPos);
-
         bool isValid = selectedPieceValidMoves.Contains(dropGridPos);
 
         if (!isValid)
         {
             SnapSelectedPieceBackToOriginal();
+            if (GameManager.Instance.CheckedKing == selectedPiece.pieceColor)
+            {
+                GameManager.Instance.TriggerInvalidMoveInCheck(selectedPiece.pieceColor);
+            }
             return;
         }
 
-        // Build move record to store LastMove after successful commit
-        BoardCell originCell = selectedPieceOriginalCell;
-        BoardCell destCell = gridSystem.GetGridObject(dropGridPos.x, dropGridPos.y);
+        TryMovePiece(selectedPiece, dropGridPos);
+    }
 
-        // Handle en-passant special case: if pawn moved diagonally to empty square and last move was enemy double pawn push
-        ChessPiece captured = destCell.GetPiece();
-        bool enPassantCapture = false;
-        if (selectedPiece is Pawn)
-        {
-            if (captured == null && LastMove.HasValue)
-            {
-                MoveRecord lm = LastMove.Value;
-                // en-passant capture occurs when pawn moves diagonally into square behind the just-moved pawn
-                if (lm.piece is Pawn &&
-                    lm.wasDoublePawnPush &&
-                    lm.to.y == selectedPiece.currentGridPosition.y &&
-                    Mathf.Abs(lm.to.x - selectedPiece.currentGridPosition.x) == 1 &&
-                    dropGridPos.x == lm.to.x &&
-                    dropGridPos.y == selectedPiece.currentGridPosition.y + ((selectedPiece.pieceColor == PieceColor.White) ? 1 : -1))
-                {
-                    // capture the pawn that did the double push (it's at lm.to)
-                    BoardCell epCell = gridSystem.GetGridObject(lm.to.x, lm.to.y);
-                    captured = epCell.GetPiece();
-                    if (captured != null)
-                    {
-                        epCell.SetPiece(null);
-                        Destroy(captured.gameObject);
-                        enPassantCapture = true;
-                    }
-                }
-            }
-        }
-
-        // Normal capture
-        if (captured != null && !enPassantCapture)
-        {
-            destCell.SetPiece(null);
-            Destroy(captured.gameObject);
-        }
-
-        // Remove from origin
-        if (originCell != null && originCell.GetPiece() == selectedPiece)
-            originCell.SetPiece(null);
-
-        // Place to destination
-        selectedPiece.currentGridPosition = dropGridPos;
-        selectedPiece.transform.position = gridSystem.GetCellBottomCenterWorldPosition(dropGridPos.x, dropGridPos.y);
-        destCell.SetPiece(selectedPiece);
-
-        // create and store LastMove
-        // MoveRecord rec = new MoveRecord
-        // {
-        //     piece = selectedPiece,
-        //     from = selectedPieceOriginalGrid,
-        //     to = dropGridPos,
-        //     captured = captured,
-        //     wasDoublePawnPush = (selectedPiece is Pawn) && Mathf.Abs(dropGridPos.y - selectedPieceOriginalGrid.y) == 2
-        // };
-        // LastMove = rec;
-
-        // // Promotion: auto-queen for simplicity
-        // if (selectedPiece is Pawn)
-        // {
-        //     if ((selectedPiece.pieceColor == PieceColor.White && dropGridPos.y == boardSize - 1) ||
-        //         (selectedPiece.pieceColor == PieceColor.Black && dropGridPos.y == 0))
-        //     {
-        //         PromotePawnToQueen((Pawn)selectedPiece, dropGridPos);
-        //     }
-        // }
-        MoveRecord rec = new MoveRecord
-        {
-            piece = selectedPiece,
-            from = selectedPieceOriginalGrid,
-            to = dropGridPos,
-            captured = captured,
-            wasDoublePawnPush = (selectedPiece is Pawn) && Mathf.Abs(dropGridPos.y - selectedPieceOriginalGrid.y) == 2,
-            wasEnPassant = enPassantCapture
-        };
-        LastMove = rec;
-
-
-        // --- CASTLING: if king moved 2 squares horizontally, move the rook too
-        if (selectedPiece is King && Mathf.Abs(dropGridPos.x - selectedPieceOriginalGrid.x) == 2)
-        {
-            // find rook on the side it came from (0 or boardSize - 1)
-            int rookX = (dropGridPos.x > selectedPieceOriginalGrid.x) ? (boardSize - 1) : 0;
-            BoardCell rookOrigCell = gridSystem.GetGridObject(rookX, dropGridPos.y);
-            ChessPiece rook = rookOrigCell?.GetPiece();
-            if (rook != null && rook is Rook && rook.pieceColor == selectedPiece.pieceColor)
-            {
-                int rookDestX = (dropGridPos.x > selectedPieceOriginalGrid.x) ? (dropGridPos.x - 1) : (dropGridPos.x + 1);
-                BoardCell rookDestCell = gridSystem.GetGridObject(rookDestX, dropGridPos.y);
-
-                // move rook data
-                if (rookOrigCell != null && rookOrigCell.GetPiece() == rook) rookOrigCell.SetPiece(null);
-                if (rookDestCell != null) rookDestCell.SetPiece(rook);
-
-                rook.currentGridPosition = new Vector2Int(rookDestX, dropGridPos.y);
-                rook.transform.position = gridSystem.GetCellBottomCenterWorldPosition(rookDestX, dropGridPos.y);
-                rook.hasMoved = true;
-            }
-        }
-
-        // Promotion: show UI instead of auto-queen
-        if (selectedPiece is Pawn)
-        {
-            bool reachedLastRank = (selectedPiece.pieceColor == PieceColor.White && dropGridPos.y == boardSize - 1)
-                                 || (selectedPiece.pieceColor == PieceColor.Black && dropGridPos.y == 0);
-
-            if (reachedLastRank)
-            {
-                // Show promotion UI and wait for callback
-                Pawn pawnToPromote = (Pawn)selectedPiece;
-
-                // Hide move show visuals but keep piece in place while choosing
-                DeleteAllValidMoveShowers();
-
-                // Show UI (promotionUI should be a serialized field on BoardManager)
-                if (promotionUI != null)
-                {
-                    promotionUI.Show(pawnToPromote.pieceColor, (chosenType) =>
-                    {
-                        // perform promotion
-                        PromotePawn(pawnToPromote, chosenType);
-
-                        // finalize turn+checks (same post-move flow as before)
-                        pawnToPromote.hasMoved = true;
-
-                        UpdateCheckStatus();
-
-                        GameManager.Instance.EndTurn();
-
-                        // check for checkmate for next player
-                        PieceColor next = (GameManager.Instance.CurrentState == GameState.WhiteTurn) ? PieceColor.White : PieceColor.Black;
-                        bool inCheck = IsKingInCheck(next);
-                        bool hasAnyLegal = HasAnyLegalMoveForColor(next);
-                        if (inCheck && !hasAnyLegal)
-                        {
-                            Debug.Log($"{next} is checkmated!");
-                            GameManager.Instance.ChangeState(GameState.GameOver);
-                        }
-
-                        // clear selection
-                        ClearSelection();
-                    });
-
-                    // return early — post-move completion will happen in callback
-                    return;
-                }
-                else
-                {
-                    // fallback: auto-queen if UI not assigned
-                    PromotePawnToQueen((Pawn)selectedPiece, dropGridPos);
-                }
-            }
-        }
-
-
-
-
-        // If not a promotion (or promotion UI not assigned and we auto-promoted), continue normal finalization:
-        selectedPiece.hasMoved = true;
-
-        // cleanup visuals
-        DeleteAllValidMoveShowers();
-
-        // 1. Calculate check and checkmate status for the NEXT player to build the SAN string
+    private void FinalizeMoveProcess(MoveRecord rec, PieceType? promotedTo)
+    {
         PieceColor nextPlayer = (GameManager.Instance.CurrentState == GameState.WhiteTurn) ? PieceColor.Black : PieceColor.White;
         bool inCheck = IsKingInCheck(nextPlayer);
         bool hasAnyLegal = HasAnyLegalMoveForColor(nextPlayer);
         bool isCheckmate = inCheck && !hasAnyLegal;
 
-        // 2. Generate the SAN string for this move
-        // (If you implemented promotion, pass the promoted PieceType here instead of null)
-        string moveSAN = ChessNotation.GetSAN(this, rec, inCheck, isCheckmate, null);
+        string moveSAN = ChessNotation.GetSAN(this, rec, inCheck, isCheckmate, promotedTo);
 
-        // 3. Update the Board Check Status
         UpdateCheckStatus();
 
-        // 4. Record the move in GameManager before ending the turn
-        bool resetHalfMove = (selectedPiece is Pawn) || (rec.captured != null) || rec.wasEnPassant;
-
-        // Pass the updated FEN to the Game Manager
+        bool resetHalfMove = (rec.piece is Pawn) || (rec.captured != null) || rec.wasEnPassant;
         string newFEN = ChessNotation.GetFEN(this, nextPlayer, GameManager.Instance.HalfMoveClock, GameManager.Instance.FullMoveNumber);
 
         GameManager.Instance.RecordMoveInfo(moveSAN, newFEN, resetHalfMove);
-
-        // 5. End Turn & Handle Game Over
         GameManager.Instance.EndTurn();
 
         if (isCheckmate)
@@ -337,30 +166,9 @@ public class BoardManager : MonoBehaviour
         }
 
         ClearSelection();
-
-        //----------------------------------------------------
-
-        // Recompute check and checkmate
-        // UpdateCheckStatus();
-
-        // // End turn and test for checkmate on next player
-        // GameManager.Instance.EndTurn();
-
-        // // After turn flip, check for checkmate for the new current player
-        // PieceColor next = (GameManager.Instance.CurrentState == GameState.WhiteTurn) ? PieceColor.White : PieceColor.Black;
-        // bool inCheck = IsKingInCheck(next);
-        // bool hasAnyLegal = HasAnyLegalMoveForColor(next);
-
-        // if (inCheck && !hasAnyLegal)
-        // {
-        //     // checkmate
-        //     Debug.Log($"{next} is checkmated!");
-        //     GameManager.Instance.ChangeState(GameState.GameOver);
-        // }
-
-        // // Clear selection
-        // ClearSelection();
     }
+
+
 
     // Promote pawn to queen (simple automatic promotion)
     // private void PromotePawnToQueen(Pawn pawn, Vector2Int pos)
@@ -485,6 +293,11 @@ public class BoardManager : MonoBehaviour
                 showMove.transform.position = gridSystem.GetCellCenterWorldPosition(mv.x, mv.y);
                 selectedPieceValidMoveShower.Add(showMove);
             }
+        }
+        
+        if (GameManager.Instance.CheckedKing == piece.pieceColor && selectedPieceValidMoves.Count == 0)
+        {
+            GameManager.Instance.TriggerInvalidMoveInCheck(piece.pieceColor);
         }
 
         Debug.Log($"Selected <color=red>{piece.pieceColor}</color> <color=green>{piece.pieceType}</color> at <color=yellow>{cell.GetCellName()}</color>");
@@ -1053,31 +866,114 @@ public class BoardManager : MonoBehaviour
     }
 
 
-    // in BoardManager
     public bool TryMovePiece(ChessPiece piece, Vector2Int to)
     {
         if (piece == null) return false;
 
-        var legal = GetLegalMoves(piece);
+        List<Vector2Int> legal = GetLegalMoves(piece);
         if (legal == null || !legal.Contains(to)) return false;
 
-        // Move piece directly (bot move)
-        BoardCell origin = gridSystem.GetGridObject(piece.currentGridPosition.x, piece.currentGridPosition.y);
-        BoardCell dest = gridSystem.GetGridObject(to.x, to.y);
+        Vector2Int from = piece.currentGridPosition;
+        BoardCell originCell = gridSystem.GetGridObject(from.x, from.y);
+        BoardCell destCell = gridSystem.GetGridObject(to.x, to.y);
 
-        ChessPiece captured = dest.GetPiece();
-        if (captured != null)
+        ChessPiece captured = destCell.GetPiece();
+        bool enPassantCapture = false;
+
+        if (piece is Pawn)
+        {
+            if (captured == null && LastMove.HasValue)
+            {
+                MoveRecord lm = LastMove.Value;
+                if (lm.piece is Pawn && lm.wasDoublePawnPush && lm.to.y == piece.currentGridPosition.y && Mathf.Abs(lm.to.x - piece.currentGridPosition.x) == 1 && to.x == lm.to.x && to.y == piece.currentGridPosition.y + ((piece.pieceColor == PieceColor.White) ? 1 : -1))
+                {
+                    BoardCell epCell = gridSystem.GetGridObject(lm.to.x, lm.to.y);
+                    captured = epCell.GetPiece();
+                    if (captured != null)
+                    {
+                        epCell.SetPiece(null);
+                        Destroy(captured.gameObject);
+                        enPassantCapture = true;
+                    }
+                }
+            }
+        }
+
+        if (captured != null && !enPassantCapture)
+        {
+            destCell.SetPiece(null);
             Destroy(captured.gameObject);
+        }
 
-        origin.SetPiece(null);
+        if (originCell != null && originCell.GetPiece() == piece) originCell.SetPiece(null);
 
         piece.currentGridPosition = to;
         piece.transform.position = gridSystem.GetCellBottomCenterWorldPosition(to.x, to.y);
+        destCell.SetPiece(piece);
 
-        dest.SetPiece(piece);
+        MoveRecord rec = new MoveRecord
+        {
+            piece = piece,
+            from = from,
+            to = to,
+            captured = captured,
+            wasDoublePawnPush = (piece is Pawn) && Mathf.Abs(to.y - from.y) == 2,
+            wasEnPassant = enPassantCapture
+        };
+        LastMove = rec;
+
+        // CASTLING
+        if (piece is King && Mathf.Abs(to.x - from.x) == 2)
+        {
+            int rookX = (to.x > from.x) ? (boardSize - 1) : 0;
+            BoardCell rookOrigCell = gridSystem.GetGridObject(rookX, to.y);
+            ChessPiece rook = rookOrigCell?.GetPiece();
+            if (rook != null && rook is Rook && rook.pieceColor == piece.pieceColor)
+            {
+                int rookDestX = (to.x > from.x) ? (to.x - 1) : (to.x + 1);
+                BoardCell rookDestCell = gridSystem.GetGridObject(rookDestX, to.y);
+
+                if (rookOrigCell != null && rookOrigCell.GetPiece() == rook) rookOrigCell.SetPiece(null);
+                if (rookDestCell != null) rookDestCell.SetPiece(rook);
+
+                rook.currentGridPosition = new Vector2Int(rookDestX, to.y);
+                rook.transform.position = gridSystem.GetCellBottomCenterWorldPosition(rookDestX, to.y);
+                rook.hasMoved = true;
+            }
+        }
+
+        // Promotion
+        if (piece is Pawn)
+        {
+            bool reachedLastRank = (piece.pieceColor == PieceColor.White && to.y == boardSize - 1) || (piece.pieceColor == PieceColor.Black && to.y == 0);
+            if (reachedLastRank)
+            {
+                Pawn pawnToPromote = (Pawn)piece;
+                DeleteAllValidMoveShowers();
+                
+                if (promotionUI != null && GameManager.Instance != null && !GameManager.Instance.IsBotTurn())
+                {
+                    promotionUI.Show(pawnToPromote.pieceColor, (chosenType) =>
+                    {
+                        PromotePawn(pawnToPromote, chosenType);
+                        piece.hasMoved = true;
+                        FinalizeMoveProcess(rec, chosenType);
+                    });
+                    return true;
+                }
+                else
+                {
+                    PromotePawnToQueen((Pawn)piece, to);
+                    piece.hasMoved = true;
+                    FinalizeMoveProcess(rec, PieceType.Queen);
+                    return true;
+                }
+            }
+        }
 
         piece.hasMoved = true;
-
+        DeleteAllValidMoveShowers();
+        FinalizeMoveProcess(rec, null);
         return true;
     }
     public List<ChessPiece> GetPieces(PieceColor color)
