@@ -10420,8 +10420,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   CurrentGameMode: 0
-  WhitePlayer: 0
-  BlackPlayer: 0
+  WhitePlayer: 1
+  BlackPlayer: 1
 --- !u!4 &1286543224
 Transform:
   m_ObjectHideFlags: 0
