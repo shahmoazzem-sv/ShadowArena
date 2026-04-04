@@ -44,9 +44,20 @@ public class GameManager : MonoBehaviour
     public PlayerType BlackPlayer = PlayerType.Bot;
 
     // Static variables to pass setup from Main Menu to Game scene
-    public static GameMode? PendingGameMode = null;
-    public static PlayerType? PendingWhitePlayer = null;
-    public static PlayerType? PendingBlackPlayer = null;
+    public static GameMode?    PendingGameMode      = null;
+    public static PlayerType?  PendingWhitePlayer   = null;
+    public static PlayerType?  PendingBlackPlayer   = null;
+    public static BotPlayerController.Difficulty? PendingBotDifficulty = null;
+    public static PieceColor?  PendingPlayerColor   = null;   // which colour the HUMAN plays
+
+    // Runtime values (readable by game-scene scripts)
+    public BotPlayerController.Difficulty BotDifficulty    { get; private set; } = BotPlayerController.Difficulty.Medium;
+    public PieceColor                     HumanPlayerColor { get; private set; } = PieceColor.White;
+
+    /// <summary>True when the camera is rotated 180° (human plays Black). Used by OrderY to invert sprite sorting.</summary>
+    public bool IsBoardFlipped { get; private set; } = false;
+
+    public void SetBoardFlipped(bool flipped) => IsBoardFlipped = flipped;
 
     // fired whenever a new turn begins (argument = color to move)
     public event Action<PieceColor> OnTurnStarted;
@@ -65,14 +76,18 @@ public class GameManager : MonoBehaviour
         }
 
         // Apply pending setup from Main Menu if it exists
-        if (PendingGameMode.HasValue) CurrentGameMode = PendingGameMode.Value;
-        if (PendingWhitePlayer.HasValue) WhitePlayer = PendingWhitePlayer.Value;
-        if (PendingBlackPlayer.HasValue) BlackPlayer = PendingBlackPlayer.Value;
+        if (PendingGameMode.HasValue)      CurrentGameMode = PendingGameMode.Value;
+        if (PendingWhitePlayer.HasValue)   WhitePlayer     = PendingWhitePlayer.Value;
+        if (PendingBlackPlayer.HasValue)   BlackPlayer     = PendingBlackPlayer.Value;
+        if (PendingBotDifficulty.HasValue) BotDifficulty   = PendingBotDifficulty.Value;
+        if (PendingPlayerColor.HasValue)   HumanPlayerColor = PendingPlayerColor.Value;
 
         // Reset so they don't affect future game plays directly started from editor
-        PendingGameMode = null;
-        PendingWhitePlayer = null;
-        PendingBlackPlayer = null;
+        PendingGameMode      = null;
+        PendingWhitePlayer   = null;
+        PendingBlackPlayer   = null;
+        PendingBotDifficulty = null;
+        PendingPlayerColor   = null;
 
         // Set a safe default early so other Start() methods can rely on it if needed.
         CurrentState = GameState.Initializing;

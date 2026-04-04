@@ -14,6 +14,11 @@ public class BoardManager : MonoBehaviour
     public static BoardManager Instance;
     public event Action<PieceColor> OnKingInCheck;
 
+    // When the human plays Black the camera is flipped 180° so Black pieces
+    // appear at the bottom of the screen. All sprites are counter-rotated so
+    // they remain visually upright.
+    private bool isBoardFlipped = false;
+
     private GridDataSystem<BoardCell> gridSystem;
 
     [Header("Custom Setup (Optional)")]
@@ -85,7 +90,8 @@ public class BoardManager : MonoBehaviour
         InputManager.Instance.OnDragging.AddListener(OnDragging);
         InputManager.Instance.OnDrop.AddListener(OnDrop);
 
-        SetupBoard();
+        FlipBoardIfNeeded(); // flip perspective if human plays Black BEFORE spawning pieces
+        SetupBoard();        // pieces now spawn using correct world pos (center vs bottom-center)
     }
 
     void OnDestroy()
@@ -102,6 +108,50 @@ public class BoardManager : MonoBehaviour
     void Update()
     {
         gridSystem.DebugDrawGridLines(Color.green, Time.deltaTime);
+    }
+
+    // -------------------------
+    // Board Perspective Flip
+    // -------------------------
+    /// <summary>
+    /// If the human player chose Black, rotate the camera 180° on the Z-axis.
+    /// Unity's ScreenToWorldPoint accounts for camera rotation automatically,
+    /// so click/drag input still maps to the correct grid squares.
+    /// Each sprite is counter-rotated so it remains upright from the camera's view.
+    /// </summary>
+    private void FlipBoardIfNeeded()
+    {
+        if (GameManager.Instance == null) return;
+        if (GameManager.Instance.HumanPlayerColor != PieceColor.Black) return;
+
+        isBoardFlipped = true;
+        GameManager.Instance.SetBoardFlipped(true); // inform other systems (e.g. OrderY)
+
+        // Rotate the camera 180° on Z so the board appears from Black's side.
+        if (Camera.main != null)
+            Camera.main.transform.Rotate(0f, 0f, 180f);
+
+        // Pieces will be spawned AFTER this call with isBoardFlipped=true,
+        // so SpawnSinglePiece already applies ApplyFlipRotation to each piece.
+    }
+
+    /// <summary>Rotates a transform 180° on Z to offset the camera flip.</summary>
+    private void ApplyFlipRotation(Transform t)
+    {
+        t.rotation = Quaternion.Euler(0f, 0f, 180f);
+    }
+
+    /// <summary>
+    /// Returns the world position at which a piece should be placed.
+    /// When the board is NOT flipped: bottom-center of the cell (pieces stand on the grid line).
+    /// When the board IS flipped: cell center, because the camera already mirrors everything;
+    /// using bottom-center + 180° sprite rotation shifts the sprite one cell up due to pivot flip.
+    /// </summary>
+    private Vector3 GetPieceWorldPos(int x, int y)
+    {
+        return isBoardFlipped
+            ? gridSystem.GetCellTopCenterWorldPosition(x, y)
+            : gridSystem.GetCellBottomCenterWorldPosition(x, y);
     }
 
     // -------------------------
@@ -212,7 +262,8 @@ public class BoardManager : MonoBehaviour
         newPiece.pieceType = promoteTo;
         newPiece.pieceColor = pawn.pieceColor;
         newPiece.currentGridPosition = pos;
-        newPiece.transform.position = gridSystem.GetCellBottomCenterWorldPosition(pos.x, pos.y);
+        newPiece.transform.position = GetPieceWorldPos(pos.x, pos.y);
+        if (isBoardFlipped) ApplyFlipRotation(newPiece.transform);
 
         // copy sprite if using pieceData
         SpriteRenderer sr = newPiece.GetComponent<SpriteRenderer>();
@@ -291,6 +342,7 @@ public class BoardManager : MonoBehaviour
             {
                 GameObject showMove = Instantiate(showMovePrefab, transform);
                 showMove.transform.position = gridSystem.GetCellCenterWorldPosition(mv.x, mv.y);
+                if (isBoardFlipped) ApplyFlipRotation(showMove.transform);
                 selectedPieceValidMoveShower.Add(showMove);
             }
         }
@@ -318,7 +370,7 @@ public class BoardManager : MonoBehaviour
     private void SnapSelectedPieceBackToOriginal()
     {
         if (selectedPiece == null) return;
-        selectedPiece.transform.position = gridSystem.GetCellBottomCenterWorldPosition(selectedPieceOriginalGrid.x, selectedPieceOriginalGrid.y);
+        selectedPiece.transform.position = GetPieceWorldPos(selectedPieceOriginalGrid.x, selectedPieceOriginalGrid.y);
         // keep selectedPiece
     }
 
@@ -600,8 +652,13 @@ public class BoardManager : MonoBehaviour
     // Robust attacker test: returns true if square is attacked by 'byColor'
     public bool IsSquareAttacked(Vector2Int square, PieceColor byColor)
     {
-        // Pawn attacks
-        int pawnDir = (byColor == PieceColor.White) ? 1 : -1;
+        // To find a pawn of 'byColor' that attacks 'square', we must look in the
+        // OPPOSITE direction to that pawn's movement:
+        //   White pawns move UP   (+y) → they attack squares above them
+        //                              → look BELOW the target (pawnDir = -1)
+        //   Black pawns move DOWN (-y) → they attack squares below them
+        //                              → look ABOVE the target (pawnDir = +1)
+        int pawnDir = (byColor == PieceColor.White) ? -1 : 1;
         Vector2Int[] pawnAttacks = new Vector2Int[] { new Vector2Int(1, pawnDir), new Vector2Int(-1, pawnDir) };
         foreach (var d in pawnAttacks)
         {
@@ -845,7 +902,8 @@ public class BoardManager : MonoBehaviour
         SpriteRenderer sr = newPiece.GetComponent<SpriteRenderer>();
         if (sr != null && pieceData != null) sr.sprite = pieceData.GetSprite(type, color);
 
-        newPiece.transform.position = gridSystem.GetCellBottomCenterWorldPosition(x, y);
+        newPiece.transform.position = GetPieceWorldPos(x, y);
+        if (isBoardFlipped) ApplyFlipRotation(newPiece.transform);
 
         BoardCell cell = gridSystem.GetGridObject(x, y);
         cell.SetPiece(newPiece);
@@ -908,7 +966,7 @@ public class BoardManager : MonoBehaviour
         if (originCell != null && originCell.GetPiece() == piece) originCell.SetPiece(null);
 
         piece.currentGridPosition = to;
-        piece.transform.position = gridSystem.GetCellBottomCenterWorldPosition(to.x, to.y);
+        piece.transform.position = GetPieceWorldPos(to.x, to.y);
         destCell.SetPiece(piece);
 
         MoveRecord rec = new MoveRecord
@@ -937,7 +995,7 @@ public class BoardManager : MonoBehaviour
                 if (rookDestCell != null) rookDestCell.SetPiece(rook);
 
                 rook.currentGridPosition = new Vector2Int(rookDestX, to.y);
-                rook.transform.position = gridSystem.GetCellBottomCenterWorldPosition(rookDestX, to.y);
+                rook.transform.position = GetPieceWorldPos(rookDestX, to.y);
                 rook.hasMoved = true;
             }
         }

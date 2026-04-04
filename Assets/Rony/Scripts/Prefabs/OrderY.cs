@@ -19,17 +19,29 @@ public class OrderY : MonoBehaviour
 
     void LateUpdate()
     {
-        if (_spriteRenderer != null)
+        if (_spriteRenderer == null) return;
+
+        bool isFlipped = GameManager.Instance != null && GameManager.Instance.IsBoardFlipped;
+
+        int calculatedOrder;
+
+        if (!isFlipped)
         {
-            // We measure how far down we are from the top of the level (_maxYPosition).
-            // This way, the result is always positive. 
-            // As Y decreases (moves down), difference grows bigger -> sorting order goes higher (topper).
+            // Normal perspective (White at bottom):
+            // Lower world-Y → further down screen → higher sort order (draws on top of pieces above it).
             float yDifference = _maxYPosition - transform.position.y;
-            
-            int calculatedOrder = _minOrder + Mathf.RoundToInt(yDifference * _precision);
-            
-            // Force it to never be minus and strictly minimum of 5.
-            _spriteRenderer.sortingOrder = Mathf.Max(_minOrder, calculatedOrder);
+            calculatedOrder = _minOrder + Mathf.RoundToInt(yDifference * _precision);
         }
+        else
+        {
+            // Flipped perspective (Black at bottom, camera rotated 180°):
+            // Lower world-Y is now visually HIGHER on screen, so we invert:
+            // Higher world-Y → further down screen → higher sort order.
+            float yDifference = transform.position.y + _maxYPosition;
+            calculatedOrder = _minOrder + Mathf.RoundToInt(yDifference * _precision);
+        }
+
+        // Never go below the minimum order.
+        _spriteRenderer.sortingOrder = Mathf.Max(_minOrder, calculatedOrder);
     }
 }
