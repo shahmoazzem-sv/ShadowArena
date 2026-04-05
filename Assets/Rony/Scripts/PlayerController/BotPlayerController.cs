@@ -164,7 +164,31 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
                     BotDifficulty == Difficulty.Medium  ? 3 : 4;
 
         bool botIsWhite = (ControlledColor == PieceColor.White);
-        var bestMove = FindBestMove(depth, botIsWhite);
+        
+        // ──────────────────────────────────────────────
+        // Phase 4: Opening Book
+        // ──────────────────────────────────────────────
+        (ChessPiece piece, Vector2Int to)? bestMove = null;
+
+        // Try to find a move in the opening book first
+        if (GameManager.Instance != null && GameManager.Instance.PgnMoves != null)
+        {
+            string bookUCI = ChessOpeningBook.GetBookMove(GameManager.Instance.PgnMoves);
+            if (!string.IsNullOrEmpty(bookUCI))
+            {
+                bestMove = ChessOpeningBook.UCItoMove(BoardManager.Instance, bookUCI, ControlledColor);
+                if (bestMove.HasValue)
+                {
+                    Debug.Log($"<color=cyan>[Opening Book]</color> Playing: {bookUCI}");
+                }
+            }
+        }
+
+        // If no book move, fall back to Minimax search
+        if (!bestMove.HasValue)
+        {
+            bestMove = FindBestMove(depth, botIsWhite);
+        }
 
         if (bestMove.HasValue)
         {

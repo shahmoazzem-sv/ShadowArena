@@ -38,6 +38,7 @@ public class MainMenuManager : MonoBehaviour
     // ── Main menu ──────────────────────────────────────────────────────────
     [Header("Main Menu Buttons")]
     [SerializeField] private Button playButton;
+    [SerializeField] private Button settingsButton;
     [SerializeField] private Button quitButton;
 
     // ── Play Setup Panel ───────────────────────────────────────────────────
@@ -84,6 +85,7 @@ public class MainMenuManager : MonoBehaviour
     {
         // Main menu
         AddListener(playButton,  OpenPlaySetup);
+        AddListener(settingsButton, OpenSettings);
         AddListener(quitButton,  QuitGame);
 
         // Setup panel
@@ -119,6 +121,14 @@ public class MainMenuManager : MonoBehaviour
     {
         if (playSetupPanel != null) playSetupPanel.SetActive(true);
         if (botSetupPanel  != null) botSetupPanel.SetActive(false);
+    }
+
+    public void OpenSettings()
+    {
+        if (SettingsPanel.Instance != null)
+        {
+            SettingsPanel.Instance.Open();
+        }
     }
 
     public void ClosePlaySetup()

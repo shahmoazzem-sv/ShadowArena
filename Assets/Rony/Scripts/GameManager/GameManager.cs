@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using System;
 
@@ -42,6 +43,10 @@ public class GameManager : MonoBehaviour
     public GameMode CurrentGameMode = GameMode.HumanVsBot;
     public PlayerType WhitePlayer = PlayerType.Human;
     public PlayerType BlackPlayer = PlayerType.Bot;
+
+    [Header("Scene")]
+    [SerializeField] private int gameSceneIndex = 1;   // index of the game scene in Build Settings
+    [SerializeField] private int mainMenuSceneIndex = 0;
 
     // Static variables to pass setup from Main Menu to Game scene
     public static GameMode?    PendingGameMode      = null;
@@ -156,10 +161,13 @@ public class GameManager : MonoBehaviour
         // If game becomes GameOver, fire OnGameOver with the currently checked king (if any).
         if (newState == GameState.GameOver)
         {
+            // Play game-over sound and stop music
+            AudioManager.Instance?.PlayGameOverSound();
+
             if (CheckedKing.HasValue)
                 OnGameOver?.Invoke(CheckedKing.Value);
             else
-                OnGameOver?.Invoke(PieceColor.White); // fallback if you want a default (optional)
+                OnGameOver?.Invoke(PieceColor.White); // fallback
         }
     }
 
@@ -262,6 +270,44 @@ public class GameManager : MonoBehaviour
         if (!moved) return false;
 
         return true;
+    }
+
+    // ──────────────────────────────────────────────
+    // Game Over – Restart / Navigation helpers
+    // ──────────────────────────────────────────────
+
+    /// <summary>
+    /// Re-stamps the CURRENT session's setup into the Pending statics so that
+    /// when the game scene reloads, GameManager.Awake reapplies the same mode,
+    /// players, difficulty and colour — giving a true "Play Again" experience.
+    /// </summary>
+    public void RestartGame()
+    {
+        // Preserve current session settings so Awake re-applies them
+        PendingGameMode      = CurrentGameMode;
+        PendingWhitePlayer   = WhitePlayer;
+        PendingBlackPlayer   = BlackPlayer;
+        PendingBotDifficulty = BotDifficulty;
+        PendingPlayerColor   = HumanPlayerColor;
+
+        // Reload current game scene
+        SceneManager.LoadScene(gameSceneIndex);
+    }
+
+    public void GoToMainMenu()
+    {
+        // Resume music for main menu
+        AudioManager.Instance?.ResumeMusic();
+        SceneManager.LoadScene(mainMenuSceneIndex);
+    }
+
+    public void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
 

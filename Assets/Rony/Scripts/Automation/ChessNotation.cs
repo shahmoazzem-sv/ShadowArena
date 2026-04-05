@@ -12,6 +12,23 @@ public static class ChessNotation
         return $"{file}{rank}";
     }
 
+    // Converts algebraic ("a1") to grid position (0,0)
+    public static Vector2Int AlgebraicToGrid(string algebraic)
+    {
+        if (string.IsNullOrEmpty(algebraic) || algebraic.Length < 2) return new Vector2Int(-1, -1);
+        
+        // Validate file (a-h)
+        int x = algebraic[0] - 'a';
+        if (x < 0 || x > 7) return new Vector2Int(-1, -1);
+
+        // Validate rank (1-8)
+        if (!char.IsDigit(algebraic[1])) return new Vector2Int(-1, -1);
+        int y = (int)char.GetNumericValue(algebraic[1]) - 1;
+        if (y < 0 || y > 7) return new Vector2Int(-1, -1);
+
+        return new Vector2Int(x, y);
+    }
+
     // Generates the Standard Algebraic Notation (SAN) for a single move (e.g., "Nf3", "exd5", "O-O")
     public static string GetSAN(BoardManager board, BoardManager.MoveRecord move, bool isCheck, bool isCheckmate, PieceType? promotion = null)
     {

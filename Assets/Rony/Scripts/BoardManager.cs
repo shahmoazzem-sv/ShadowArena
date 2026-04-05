@@ -203,6 +203,18 @@ public class BoardManager : MonoBehaviour
 
         UpdateCheckStatus();
 
+        // ──────────────────────────────────────────────
+        // Chess SFX: Checkmate or Move/Capture
+        // ──────────────────────────────────────────────
+        if (isCheckmate)
+        {
+            AudioManager.Instance?.PlaySFX(AudioManager.Instance.Checkmate);
+        }
+        else if (inCheck)
+        {
+            AudioManager.Instance?.PlaySFX(AudioManager.Instance.KingCheck);
+        }
+
         bool resetHalfMove = (rec.piece is Pawn) || (rec.captured != null) || rec.wasEnPassant;
         string newFEN = ChessNotation.GetFEN(this, nextPlayer, GameManager.Instance.HalfMoveClock, GameManager.Instance.FullMoveNumber);
 
@@ -301,6 +313,17 @@ public class BoardManager : MonoBehaviour
         if (piece == null) return;
 
         // Turn enforcement
+        if (GameManager.Instance.CurrentState == GameState.GameOver)
+        {
+            return;
+        }
+
+        // Prevent selecting ANY pieces if it's currently the Bot's turn
+        if (GameManager.Instance.IsBotTurn())
+        {
+            return;
+        }
+
         bool isWhiteTurn = GameManager.Instance.CurrentState == GameState.WhiteTurn;
         bool isWhitePiece = piece.pieceColor == PieceColor.White;
         if ((isWhiteTurn && !isWhitePiece) || (!isWhiteTurn && isWhitePiece))
@@ -351,6 +374,11 @@ public class BoardManager : MonoBehaviour
         {
             GameManager.Instance.TriggerInvalidMoveInCheck(piece.pieceColor);
         }
+
+        // ──────────────────────────────────────────────
+        // Chess SFX: Piece Click
+        // ──────────────────────────────────────────────
+        AudioManager.Instance?.PlaySFX(AudioManager.Instance.PieceClick);
 
         Debug.Log($"Selected <color=red>{piece.pieceColor}</color> <color=green>{piece.pieceType}</color> at <color=yellow>{cell.GetCellName()}</color>");
     }
@@ -1031,6 +1059,24 @@ public class BoardManager : MonoBehaviour
 
         piece.hasMoved = true;
         DeleteAllValidMoveShowers();
+
+        // ──────────────────────────────────────────────
+        // Chess SFX: Move vs Capture
+        // ──────────────────────────────────────────────
+        if (rec.captured != null)
+        {
+             // Check if captured by AI
+             if (GameManager.Instance != null && GameManager.Instance.IsBotTurn())
+                AudioManager.Instance?.PlaySFX(AudioManager.Instance.PieceCapturedByAI);
+             else
+                AudioManager.Instance?.PlaySFX(AudioManager.Instance.PieceCapture);
+        }
+        else
+        {
+            // Only play normal move sound if it wasn't a check (Check sound triggered in FinalizeMoveProcess)
+            AudioManager.Instance?.PlaySFX(AudioManager.Instance.PieceMove);
+        }
+
         FinalizeMoveProcess(rec, null);
         return true;
     }
