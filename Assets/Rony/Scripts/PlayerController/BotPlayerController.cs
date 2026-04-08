@@ -31,17 +31,17 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
     // ──────────────────────────────────────────────
     // Material values
     // ──────────────────────────────────────────────
-    private const int VAL_PAWN   =  100;
-    private const int VAL_KNIGHT =  320;
-    private const int VAL_BISHOP =  330;
-    private const int VAL_ROOK   =  500;
-    private const int VAL_QUEEN  =  900;
-    private const int VAL_KING   = 20000;
+    private const int VAL_PAWN = 100;
+    private const int VAL_KNIGHT = 320;
+    private const int VAL_BISHOP = 330;
+    private const int VAL_ROOK = 500;
+    private const int VAL_QUEEN = 900;
+    private const int VAL_KING = 20000;
 
     // Bonus for giving check (scaled so it doesn't override material)
-    private const int CHECK_BONUS      = 50;
+    private const int CHECK_BONUS = 50;
     // Score returned for checkmate positions inside minimax
-    private const int CHECKMATE_SCORE  = 100000;
+    private const int CHECKMATE_SCORE = 100000;
 
     // ──────────────────────────────────────────────
     // Piece-Square Tables (from White's perspective; flip row for Black)
@@ -160,11 +160,11 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
         thinking = true;
         yield return new WaitForSeconds(ThinkDelay);
 
-        int depth = BotDifficulty == Difficulty.Easy   ? 2 :
-                    BotDifficulty == Difficulty.Medium  ? 3 : 4;
+        int depth = BotDifficulty == Difficulty.Easy ? 2 :
+                    BotDifficulty == Difficulty.Medium ? 3 : 4;
 
         bool botIsWhite = (ControlledColor == PieceColor.White);
-        
+
         // ──────────────────────────────────────────────
         // Phase 4: Opening Book
         // ──────────────────────────────────────────────
@@ -229,7 +229,7 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
             if (score > bestScore)
             {
                 bestScore = score;
-                bestMove  = move;
+                bestMove = move;
             }
         }
 
@@ -259,7 +259,7 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
                 // Prefer faster mates → subtract depth so shallower mate = higher score
                 return maximising
                     ? -(CHECKMATE_SCORE + depth)
-                    :  (CHECKMATE_SCORE + depth);
+                    : (CHECKMATE_SCORE + depth);
             }
             return 0; // stalemate
         }
@@ -277,7 +277,7 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
                 board.UndoSimulatedMove(rec);
 
                 maxEval = Mathf.Max(maxEval, eval);
-                alpha   = Mathf.Max(alpha, eval);
+                alpha = Mathf.Max(alpha, eval);
                 if (beta <= alpha) break; // β cut-off
             }
             return maxEval;
@@ -292,7 +292,7 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
                 board.UndoSimulatedMove(rec);
 
                 minEval = Mathf.Min(minEval, eval);
-                beta    = Mathf.Min(beta, eval);
+                beta = Mathf.Min(beta, eval);
                 if (beta <= alpha) break; // α cut-off
             }
             return minEval;
@@ -334,7 +334,7 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
         ChessPiece victim = board.GetPieceAt(to);
         if (victim != null && victim.pieceColor != movingColor)
         {
-            int victimVal   = GetPieceValue(victim.pieceType);
+            int victimVal = GetPieceValue(victim.pieceType);
             int attackerVal = GetPieceValue(piece.pieceType);
             score += victimVal * 10 - attackerVal + 10000; // base 10000 to keep all captures above quiet moves
         }
@@ -384,12 +384,12 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
                 if (p.pieceType == PieceType.Queen)
                 {
                     if (p.pieceColor == PieceColor.White) whiteQueenPresent = true;
-                    else                                   blackQueenPresent = true;
+                    else blackQueenPresent = true;
                 }
                 if (p.pieceType != PieceType.King && p.pieceType != PieceType.Pawn)
                 {
                     if (p.pieceColor == PieceColor.White) whiteMaterial += GetPieceValue(p.pieceType);
-                    else                                   blackMaterial += GetPieceValue(p.pieceType);
+                    else blackMaterial += GetPieceValue(p.pieceType);
                 }
             }
         }
@@ -431,8 +431,8 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
 
         // ─── Check bonus ─────────────────────────────────────────────────────
         // Small bonus for putting the opponent in check
-        if (board.IsKingInCheck(PieceColor.Black))  score += CHECK_BONUS;
-        if (board.IsKingInCheck(PieceColor.White))  score -= CHECK_BONUS;
+        if (board.IsKingInCheck(PieceColor.Black)) score += CHECK_BONUS;
+        if (board.IsKingInCheck(PieceColor.White)) score -= CHECK_BONUS;
 
         // ─── Endgame: Passed Pawn bonus ──────────────────────────────────────
         if (isEndgame)
@@ -472,13 +472,13 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
 
         switch (p.pieceType)
         {
-            case PieceType.Pawn:   return PST_Pawn[row, x];
+            case PieceType.Pawn: return PST_Pawn[row, x];
             case PieceType.Knight: return PST_Knight[row, x];
             case PieceType.Bishop: return PST_Bishop[row, x];
-            case PieceType.Rook:   return PST_Rook[row, x];
-            case PieceType.Queen:  return PST_Queen[row, x];
-            case PieceType.King:   return isEndgame ? PST_King_End[row, x] : PST_King_Mid[row, x];
-            default:               return 0;
+            case PieceType.Rook: return PST_Rook[row, x];
+            case PieceType.Queen: return PST_Queen[row, x];
+            case PieceType.King: return isEndgame ? PST_King_End[row, x] : PST_King_Mid[row, x];
+            default: return 0;
         }
     }
 
@@ -544,11 +544,11 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
     {
         // Reward pushing their king to the edge
         int centerDist = Mathf.Abs(theirKing.x - 3) + Mathf.Abs(theirKing.y - 3);
-        int edgeBonus  = centerDist * 10;   // further from center = bigger bonus
+        int edgeBonus = centerDist * 10;   // further from center = bigger bonus
 
         // Reward our king approaching their king (for mating net)
-        int kingDist   = Mathf.Abs(ourKing.x - theirKing.x) + Mathf.Abs(ourKing.y - theirKing.y);
-        int proximity  = (14 - kingDist) * 4;  // closer = bigger bonus
+        int kingDist = Mathf.Abs(ourKing.x - theirKing.x) + Mathf.Abs(ourKing.y - theirKing.y);
+        int proximity = (14 - kingDist) * 4;  // closer = bigger bonus
 
         return edgeBonus + proximity;
     }
@@ -578,13 +578,13 @@ public class BotPlayerController : MonoBehaviour, IPlayerController
     {
         switch (type)
         {
-            case PieceType.Pawn:   return VAL_PAWN;
+            case PieceType.Pawn: return VAL_PAWN;
             case PieceType.Knight: return VAL_KNIGHT;
             case PieceType.Bishop: return VAL_BISHOP;
-            case PieceType.Rook:   return VAL_ROOK;
-            case PieceType.Queen:  return VAL_QUEEN;
-            case PieceType.King:   return VAL_KING;
-            default:               return 0;
+            case PieceType.Rook: return VAL_ROOK;
+            case PieceType.Queen: return VAL_QUEEN;
+            case PieceType.King: return VAL_KING;
+            default: return 0;
         }
     }
 
