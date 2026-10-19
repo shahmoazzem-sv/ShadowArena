@@ -1,0 +1,613 @@
+fileFormatVersion: 2
+guid: 49594ca20af65f64a99e076bd815ff2e
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7889178423500791906
+    second: standardboard_chess_pices_0
+  - first:
+      213: 3271484753674468432
+    second: standardboard_chess_pices_1
+  - first:
+      213: 8905617357761582398
+    second: standardboard_chess_pices_2
+  - first:
+      213: 4996141176111386851
+    second: standardboard_chess_pices_3
+  - first:
+      213: -9114484126553778583
+    second: standardboard_chess_pices_4
+  - first:
+      213: 442507272638092065
+    second: standardboard_chess_pices_5
+  - first:
+      213: 8878295545456951885
+    second: standardboard_chess_pices_6
+  - first:
+      213: -1938443755891334544
+    second: standardboard_chess_pices_7
+  - first:
+      213: -4415211603474868955
+    second: standardboard_chess_pices_8
+  - first:
+      213: 4285729345869970674
+    second: standardboard_chess_pices_9
+  - first:
+      213: -7621730285545031490
+    second: standardboard_chess_pices_10
+  - first:
+      213: 8810328227079065732
+    second: standardboard_chess_pices_11
+  - first:
+      213: 493221452374342275
+    second: standardboard_chess_pices_12
+  - first:
+      213: -4627380139959448737
+    second: standardboard_chess_pices_13
+  - first:
+      213: -3233909541947804217
+    second: standardboard_chess_pices_14
+  - first:
+      213: 4401985927702770499
+    second: standardboard_chess_pices_15
+  - first:
+      213: -8735956834954207085
+    second: standardboard_chess_pices_16
+  - first:
+      213: -193362733365141678
+    second: standardboard_chess_pices_17
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: standardboard_chess_pices_0
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 253
+        width: 80
+        height: 99
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 260e07e3afdfb7d60800000000000000
+      internalID: 7889178423500791906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_1
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 253
+        width: 92
+        height: 108
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05c7fd6ec06a66d20800000000000000
+      internalID: 3271484753674468432
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_2
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 253
+        width: 81
+        height: 109
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e359eea8dcb179b70800000000000000
+      internalID: 8905617357761582398
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_3
+      rect:
+        serializedVersion: 2
+        x: 391
+        y: 253
+        width: 109
+        height: 107
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e052d1ddebd55540800000000000000
+      internalID: 4996141176111386851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_4
+      rect:
+        serializedVersion: 2
+        x: 524
+        y: 253
+        width: 106
+        height: 111
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96653dd3af8d28180800000000000000
+      internalID: -9114484126553778583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_5
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 253
+        width: 81
+        height: 110
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 123de1c150a142600800000000000000
+      internalID: 442507272638092065
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_6
+      rect:
+        serializedVersion: 2
+        x: 792
+        y: 253
+        width: 91
+        height: 107
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d4205e562ca063b70800000000000000
+      internalID: 8878295545456951885
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_7
+      rect:
+        serializedVersion: 2
+        x: 930
+        y: 253
+        width: 80
+        height: 100
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 072e501aca34915e0800000000000000
+      internalID: -1938443755891334544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_8
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 127
+        width: 80
+        height: 100
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52592be70740ab2c0800000000000000
+      internalID: -4415211603474868955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_9
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 127
+        width: 92
+        height: 108
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2fcfb002228f97b30800000000000000
+      internalID: 4285729345869970674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_10
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 127
+        width: 81
+        height: 110
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb8704cdfac2a3690800000000000000
+      internalID: -7621730285545031490
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_11
+      rect:
+        serializedVersion: 2
+        x: 391
+        y: 128
+        width: 109
+        height: 107
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48015a9e7d2944a70800000000000000
+      internalID: 8810328227079065732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_12
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 127
+        width: 106
+        height: 112
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38aff583c4648d600800000000000000
+      internalID: 493221452374342275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_13
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 128
+        width: 81
+        height: 108
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5b0505974e38cfb0800000000000000
+      internalID: -4627380139959448737
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_14
+      rect:
+        serializedVersion: 2
+        x: 791
+        y: 128
+        width: 92
+        height: 107
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c57474d768de13d0800000000000000
+      internalID: -3233909541947804217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_15
+      rect:
+        serializedVersion: 2
+        x: 930
+        y: 127
+        width: 80
+        height: 100
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 343fdf6e0eef61d30800000000000000
+      internalID: 4401985927702770499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_16
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 22
+        width: 73
+        height: 90
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 390a86f2b85a3c680800000000000000
+      internalID: -8735956834954207085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: standardboard_chess_pices_17
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 24
+        width: 74
+        height: 90
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 25fd8f45e99015df0800000000000000
+      internalID: -193362733365141678
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: a3d7deb7b4f72e04d99722b7eaa7ad9f
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":128.0,"y":128.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      standardboard_chess_pices_0: 7889178423500791906
+      standardboard_chess_pices_1: 3271484753674468432
+      standardboard_chess_pices_10: -7621730285545031490
+      standardboard_chess_pices_11: 8810328227079065732
+      standardboard_chess_pices_12: 493221452374342275
+      standardboard_chess_pices_13: -4627380139959448737
+      standardboard_chess_pices_14: -3233909541947804217
+      standardboard_chess_pices_15: 4401985927702770499
+      standardboard_chess_pices_16: -8735956834954207085
+      standardboard_chess_pices_17: -193362733365141678
+      standardboard_chess_pices_2: 8905617357761582398
+      standardboard_chess_pices_3: 4996141176111386851
+      standardboard_chess_pices_4: -9114484126553778583
+      standardboard_chess_pices_5: 442507272638092065
+      standardboard_chess_pices_6: 8878295545456951885
+      standardboard_chess_pices_7: -1938443755891334544
+      standardboard_chess_pices_8: -4415211603474868955
+      standardboard_chess_pices_9: 4285729345869970674
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
